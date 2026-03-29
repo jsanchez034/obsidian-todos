@@ -1,4 +1,4 @@
-import { cn } from "@desktop-app/ui/lib/utils";
+import { cn } from "@obsidian-todos/ui/lib/utils";
 import * as React from "react";
 
 function Label({ className, ...props }: React.ComponentProps<"label">) {

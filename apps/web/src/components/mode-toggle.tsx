@@ -1,10 +1,10 @@
-import { Button } from "@desktop-app/ui/components/button";
+import { Button } from "@obsidian-todos/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@desktop-app/ui/components/dropdown-menu";
+} from "@obsidian-todos/ui/components/dropdown-menu";
 import { Moon, Sun } from "lucide-react";
 
 import { useTheme } from "@/components/theme-provider";

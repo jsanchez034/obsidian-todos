@@ -1,3 +1,3 @@
 {
-  "extends": "@desktop-app/config/tsconfig.base.json"
+  "extends": "@obsidian-todos/config/tsconfig.base.json"
 }

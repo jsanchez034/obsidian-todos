@@ -1,26 +1,27 @@
 import type { ElectrobunConfig } from "electrobun";
 
-const webBuildDir = "../web/build/client";
+const webBuildDir = "../web/dist";
 
 export default {
   app: {
-    name: "desktop-app",
-    identifier: "dev.bettertstack.desktop-app.desktop",
-    version: "0.0.1",
+    name: "obsidian-todos",
+    identifier: "dev.bettertstack.obsidian-todos.desktop",
+    version: "0.0.2",
   },
   runtime: {
-    exitOnLastWindowClosed: true,
+    exitOnLastWindowClosed: false,
   },
   build: {
     bun: {
       entrypoint: "src/bun/index.ts",
     },
     copy: {
-      [webBuildDir]: "views/mainview",
+      [webBuildDir]: "views/popup",
+      "assets/tray-icon-Template.png": "views/assets/tray-icon-Template.png",
+      "assets/tray-icon-Template@2x.png": "views/assets/tray-icon-Template@2x.png",
     },
-    watchIgnore: [`${webBuildDir}/**`],
     mac: {
-      bundleCEF: true,
+      bundleCEF: false,
       defaultRenderer: "cef",
     },
     linux: {

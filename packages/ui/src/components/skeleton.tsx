@@ -1,4 +1,4 @@
-import { cn } from "@desktop-app/ui/lib/utils";
+import { cn } from "@obsidian-todos/ui/lib/utils";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
