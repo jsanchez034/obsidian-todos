@@ -12,11 +12,11 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@desktop-app/ui/components",
-    "utils": "@desktop-app/ui/lib/utils",
-    "hooks": "@desktop-app/ui/hooks",
-    "lib": "@desktop-app/ui/lib",
-    "ui": "@desktop-app/ui/components"
+    "components": "@obsidian-todos/ui/components",
+    "utils": "@obsidian-todos/ui/lib/utils",
+    "hooks": "@obsidian-todos/ui/hooks",
+    "lib": "@obsidian-todos/ui/lib",
+    "ui": "@obsidian-todos/ui/components"
   },
   "menuColor": "default",
   "menuAccent": "subtle",

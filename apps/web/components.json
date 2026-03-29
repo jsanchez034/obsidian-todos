@@ -13,8 +13,8 @@
   "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
-    "utils": "@desktop-app/ui/lib/utils",
-    "ui": "@desktop-app/ui/components",
+    "utils": "@obsidian-todos/ui/lib/utils",
+    "ui": "@obsidian-todos/ui/components",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },

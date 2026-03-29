@@ -1,5 +1,5 @@
 {
-  "name": "desktop-app",
+  "name": "obsidian-todos",
   "private": true,
   "workspaces": {
     "packages": [
@@ -25,18 +25,18 @@
     "build": "turbo build",
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
-    "dev:desktop": "turbo -F desktop dev:hmr",
+    "dev:desktop": "turbo -F desktop dev",
     "build:desktop": "turbo -F desktop build:stable",
     "build:desktop:canary": "turbo -F desktop build:canary",
     "check": "oxlint && oxfmt --write"
   },
   "dependencies": {
-    "@desktop-app/env": "workspace:*",
+    "@obsidian-todos/env": "workspace:*",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@desktop-app/config": "workspace:*",
+    "@obsidian-todos/config": "workspace:*",
     "oxfmt": "^0.26.0",
     "oxlint": "^1.41.0",
     "turbo": "^2.8.12",

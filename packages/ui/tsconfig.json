@@ -1,11 +1,11 @@
 {
-  "extends": "@desktop-app/config/tsconfig.base.json",
+  "extends": "@obsidian-todos/config/tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
-      "@desktop-app/ui/*": ["./src/*"]
+      "@obsidian-todos/ui/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

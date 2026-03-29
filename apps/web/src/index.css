@@ -1,1 +1,46 @@
-@import "@desktop-app/ui/globals.css";
+@import "@obsidian-todos/ui/globals.css";
+@import "@mdxeditor/editor/style.css";
+
+@plugin "@tailwindcss/typography";
+
+.dark-editor {
+  --accentBase: oklch(0.2 0.02 43);
+  --accentBgSubtle: oklch(0.22 0.03 43);
+  --accentBg: oklch(0.25 0.04 43);
+  --accentBgHover: oklch(0.28 0.05 43);
+  --accentBgActive: oklch(0.3 0.06 43);
+  --accentLine: oklch(0.35 0.07 43);
+  --accentBorder: oklch(0.45 0.1 43);
+  --accentBorderHover: oklch(0.55 0.14 43);
+  --accentSolid: oklch(0.717 0.186 42.9);
+  --accentSolidHover: oklch(0.76 0.18 42.9);
+  --accentText: oklch(0.8 0.16 42.9);
+  --accentTextContrast: oklch(0.9 0.1 42.9);
+
+  --baseBase: oklch(0.182 0 0);
+  --baseBgSubtle: oklch(0.2 0 0);
+  --baseBg: oklch(0.22 0 0);
+  --baseBgHover: oklch(0.26 0 0);
+  --baseBgActive: oklch(0.29 0 0);
+  --baseLine: oklch(0.32 0 0);
+  --baseBorder: oklch(0.37 0 0);
+  --baseBorderHover: oklch(0.42 0 0);
+  --baseSolid: oklch(0.5 0 0);
+  --baseSolidHover: oklch(0.55 0 0);
+  --baseText: oklch(0.907 0 0);
+  --baseTextContrast: oklch(0.95 0 0);
+
+  --basePageBg: oklch(0.182 0 0);
+  color: var(--baseText);
+  background: var(--basePageBg);
+}
+
+/* Vertically center MDXEditor checkbox with text */
+.mdxeditor-root-contenteditable li[role="checkbox"]::before {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.mdxeditor-root-contenteditable li[role="checkbox"]::after {
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+}
