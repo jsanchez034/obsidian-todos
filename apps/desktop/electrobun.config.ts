@@ -22,7 +22,7 @@ export default {
     },
     mac: {
       bundleCEF: false,
-      defaultRenderer: "cef",
+      defaultRenderer: "native",
     },
     linux: {
       bundleCEF: true,

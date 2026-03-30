@@ -77,7 +77,8 @@ export function App() {
       const current = stateRef.current;
       if (current.filePath && rpc.isElectrobun && !current.isDirty) {
         const content = await rpc.readFile(current.filePath);
-        if (content) {
+        // Guard against race: if the file changed while we were reading, don't overwrite
+        if (content && stateRef.current.filePath === current.filePath) {
           setFile(current.filePath, content);
           editorRef.current?.setMarkdown(content);
         }
@@ -92,7 +93,7 @@ export function App() {
         const current = stateRef.current;
         if (current.filePath && rpc.isElectrobun && !current.isDirty) {
           rpc.readFile(current.filePath).then((content) => {
-            if (content) {
+            if (content && stateRef.current.filePath === current.filePath) {
               setFile(current.filePath!, content);
               editorRef.current?.setMarkdown(content);
             }

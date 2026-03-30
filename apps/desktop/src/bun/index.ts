@@ -1,17 +1,52 @@
 import { watch, type FSWatcher } from "fs";
+import { join } from "path";
+import { mkdir } from "fs/promises";
 import {
   ApplicationMenu,
   BrowserView,
   BrowserWindow,
   ContextMenu,
+  GlobalShortcut,
   Screen,
   Tray,
   Utils,
 } from "electrobun/bun";
-import type { AppRPCSchema } from "../../web/src/lib/rpc-schema";
+import type { AppRPCSchema } from "../../../web/src/lib/rpc-schema";
 
 // Hide dock icon — this is a menu bar-only app
 Utils.setDockIconVisible(false);
+
+// --- Config ---
+function getConfigDir(): string {
+  try {
+    return Utils.paths.userData;
+  } catch {
+    // In dev mode, version.json doesn't exist so userData throws.
+    // Fall back to ~/Library/Application Support/obsidian-todos
+    return join(Utils.paths.appData, "obsidian-todos");
+  }
+}
+const CONFIG_DIR = getConfigDir();
+const CONFIG_PATH = join(CONFIG_DIR, "config.json");
+const DEFAULT_CONFIG = { hotkey: "CommandOrControl+Shift+T" };
+
+async function loadConfig(): Promise<typeof DEFAULT_CONFIG> {
+  try {
+    const text = await Bun.file(CONFIG_PATH).text();
+    return { ...DEFAULT_CONFIG, ...JSON.parse(text) };
+  } catch {
+    return { ...DEFAULT_CONFIG };
+  }
+}
+
+async function ensureConfig() {
+  try {
+    await Bun.file(CONFIG_PATH).text();
+  } catch {
+    await mkdir(CONFIG_DIR, { recursive: true });
+    await Bun.write(CONFIG_PATH, JSON.stringify(DEFAULT_CONFIG, null, 2) + "\n");
+  }
+}
 
 // Track whether a file has been opened (so we know if popup toggle makes sense)
 let hasFileLoaded = false;
@@ -37,7 +72,7 @@ function startWatching(filePath: string) {
       try {
         const content = await Bun.file(filePath).text();
         if (popupWindow) {
-          popupWindow.webview.rpc.send.fileChanged({ path: filePath, content });
+          popupWindow.webview.rpc!.send.fileChanged({ path: filePath, content });
         }
       } catch {
         // File may be temporarily unavailable during write
@@ -85,7 +120,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
     messages: {
       webviewReady: () => {
         if (pendingFile) {
-          popupWindow?.webview.rpc.send.fileOpened(pendingFile);
+          popupWindow?.webview.rpc!.send.fileOpened(pendingFile);
           pendingFile = null;
         }
       },
@@ -103,13 +138,13 @@ const tray = new Tray({
 });
 
 // Popup window management
-let popupWindow: BrowserWindow | null = null;
+let popupWindow: BrowserWindow<typeof rpc> | null = null;
 
 function showPopup() {
   if (popupWindow) {
     popupWindow.setAlwaysOnTop(true);
     popupWindow.show();
-    popupWindow.webview.rpc.send.windowShown({});
+    popupWindow.webview.rpc!.send.windowShown({});
     return;
   }
 
@@ -154,6 +189,9 @@ function showPopup() {
     }
     popupWindow?.minimize();
   });
+  popupWindow.on("blur", () => {
+    hidePopup();
+  });
 }
 
 function hidePopup() {
@@ -185,7 +223,7 @@ async function openFileFromTray() {
 
   if (windowAlreadyExists) {
     showPopup();
-    popupWindow!.webview.rpc.send.fileOpened(fileData);
+    popupWindow!.webview.rpc!.send.fileOpened(fileData);
   } else {
     // Window doesn't exist yet — store pending file and create window
     // The webview will send webviewReady once mounted, triggering the pending file send
@@ -194,9 +232,20 @@ async function openFileFromTray() {
   }
 }
 
+function togglePopup() {
+  if (hasFileLoaded && popupWindow && !popupWindow.isMinimized()) {
+    hidePopup();
+  } else if (hasFileLoaded) {
+    showPopup();
+  } else {
+    showTrayContextMenu();
+  }
+}
+
 function showTrayContextMenu() {
   ContextMenu.showContextMenu([
     { type: "normal", label: "Open File...", action: "open-file" },
+    { type: "normal", label: "Preferences...", action: "preferences" },
     { type: "separator" },
     { type: "normal", label: "Quit", action: "quit" },
   ]);
@@ -211,6 +260,9 @@ ContextMenu.on("context-menu-clicked", (event: any) => {
   }
   if (action === "open-file") {
     openFileFromTray();
+  }
+  if (action === "preferences") {
+    Bun.spawn(["open", CONFIG_PATH]);
   }
 });
 
@@ -227,19 +279,13 @@ tray.on("tray-clicked", (event: any) => {
     openFileFromTray();
     return;
   }
+  if (action === "preferences") {
+    Bun.spawn(["open", CONFIG_PATH]);
+    return;
+  }
 
-  // Regular icon click (no action)
+  // Regular icon click (no action) — show context menu
   if (!action) {
-    // Left-click behavior depends on state
-    if (hasFileLoaded) {
-      // Toggle popup
-      if (!popupWindow?.isMinimized()) {
-        hidePopup();
-      } else {
-        showPopup();
-      }
-    }
-
     showTrayContextMenu();
   }
 });
@@ -262,5 +308,39 @@ ApplicationMenu.setApplicationMenu([
     ],
   },
 ]);
+
+// --- Global hotkey setup ---
+let currentHotkey: string | null = null;
+
+async function registerHotkey() {
+  const config = await loadConfig();
+  const hotkey = config.hotkey;
+
+  if (currentHotkey) {
+    GlobalShortcut.unregister(currentHotkey);
+    currentHotkey = null;
+  }
+
+  const registered = GlobalShortcut.register(hotkey, togglePopup);
+  if (registered) {
+    currentHotkey = hotkey;
+    console.log(`Global shortcut registered: ${hotkey}`);
+  } else {
+    console.error(`Failed to register global shortcut: ${hotkey}`);
+  }
+}
+
+// Initialize config and hotkey
+await ensureConfig();
+await registerHotkey();
+
+// Watch config file for live hotkey changes
+let configDebounce: ReturnType<typeof setTimeout> | null = null;
+watch(CONFIG_PATH, { persistent: false }, () => {
+  if (configDebounce) clearTimeout(configDebounce);
+  configDebounce = setTimeout(() => {
+    registerHotkey();
+  }, 300);
+});
 
 console.log("Obsidian Todos menu bar app started.");
