@@ -36,11 +36,14 @@
 }
 
 /* Vertically center MDXEditor checkbox with text */
-.mdxeditor-root-contenteditable li[role="checkbox"]::before {
-  top: 50%;
-  transform: translateY(-50%);
-}
-.mdxeditor-root-contenteditable li[role="checkbox"]::after {
-  top: 50%;
-  transform: translateY(-50%) rotate(45deg);
+.prose {
+  & li[role="checkbox"] {
+    text-indent: 0.5rem;
+  }
+  & li[role="checkbox"]::before {
+    transform: translate(6px, 6px);
+  }
+  & li[role="checkbox"]::after {
+    transform: translate(6px, 6px) rotate(45deg);
+  }
 }
