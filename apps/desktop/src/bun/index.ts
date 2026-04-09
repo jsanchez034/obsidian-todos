@@ -1,6 +1,5 @@
 import { watch, type FSWatcher } from "fs";
 import { join } from "path";
-import { mkdir } from "fs/promises";
 import {
   ApplicationMenu,
   BrowserView,
@@ -12,6 +11,8 @@ import {
   Utils,
 } from "electrobun/bun";
 import type { AppRPCSchema } from "../../../web/src/lib/rpc-schema";
+import { loadConfig, ensureConfig } from "./lib/config";
+import { calculatePopupPosition } from "./lib/window-position";
 
 // Hide dock icon — this is a menu bar-only app
 Utils.setDockIconVisible(false);
@@ -28,25 +29,6 @@ function getConfigDir(): string {
 }
 const CONFIG_DIR = getConfigDir();
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
-const DEFAULT_CONFIG = { hotkey: "CommandOrControl+Shift+T" };
-
-async function loadConfig(): Promise<typeof DEFAULT_CONFIG> {
-  try {
-    const text = await Bun.file(CONFIG_PATH).text();
-    return { ...DEFAULT_CONFIG, ...JSON.parse(text) };
-  } catch {
-    return { ...DEFAULT_CONFIG };
-  }
-}
-
-async function ensureConfig() {
-  try {
-    await Bun.file(CONFIG_PATH).text();
-  } catch {
-    await mkdir(CONFIG_DIR, { recursive: true });
-    await Bun.write(CONFIG_PATH, JSON.stringify(DEFAULT_CONFIG, null, 2) + "\n");
-  }
-}
 
 // Track whether a file has been opened (so we know if popup toggle makes sense)
 let hasFileLoaded = false;
@@ -154,19 +136,7 @@ function showPopup() {
   const popupWidth = 400;
   const popupHeight = 600;
 
-  let x: number;
-  let y: number;
-
-  if (bounds.x === 0 && bounds.y === 0 && bounds.width === 0) {
-    x = workArea.x + workArea.width - popupWidth - 10;
-    y = workArea.y;
-  } else {
-    x = Math.round(bounds.x + bounds.width / 2 - popupWidth / 2);
-    y = bounds.y + bounds.height + 4;
-  }
-
-  x = Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - popupWidth));
-  y = Math.max(workArea.y, Math.min(y, workArea.y + workArea.height - popupHeight));
+  const { x, y } = calculatePopupPosition(bounds, workArea, popupWidth, popupHeight);
 
   popupWindow = new BrowserWindow({
     title: "obsidian-todos",
@@ -313,7 +283,7 @@ ApplicationMenu.setApplicationMenu([
 let currentHotkey: string | null = null;
 
 async function registerHotkey() {
-  const config = await loadConfig();
+  const config = await loadConfig(CONFIG_PATH);
   const hotkey = config.hotkey;
 
   if (currentHotkey) {
@@ -331,7 +301,7 @@ async function registerHotkey() {
 }
 
 // Initialize config and hotkey
-await ensureConfig();
+await ensureConfig(CONFIG_DIR, CONFIG_PATH);
 await registerHotkey();
 
 // Watch config file for live hotkey changes

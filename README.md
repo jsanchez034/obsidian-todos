@@ -56,10 +56,25 @@ import { Button } from "@obsidian-todos/ui/components/button";
 
 For app-specific blocks, run the shadcn CLI from `apps/web`.
 
+## Testing
+
+Tests are written with [Vitest](https://vitest.dev/) and [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+
+- **Unit tests** are colocated with their implementation files (e.g., `button.tsx` → `button.test.tsx`)
+- **Integration tests** live in `src/__tests__/integration/`
+
+```bash
+bun run test              # Run all tests across all workspaces
+cd packages/ui && bun run test     # UI component unit tests only
+cd apps/web && bun run test        # Web app tests only
+cd apps/desktop && bun run test    # Desktop logic tests only
+```
+
 ## Available Scripts
 
 - `bun run dev` — Start all apps in development mode
 - `bun run build` — Build all apps
+- `bun run test` — Run all tests (Vitest across all workspaces)
 - `bun run dev:web` — Web app only (Vite on :5173)
 - `bun run dev:desktop` — Desktop app with HMR
 - `bun run build:desktop` — Build stable Electrobun desktop app
