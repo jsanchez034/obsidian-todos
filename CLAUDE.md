@@ -11,6 +11,7 @@ bun run dev:web                # Web app only (Vite on :5173)
 bun run dev:desktop            # Desktop app with HMR
 bun run build                  # Build all apps
 bun run build:desktop          # Build stable desktop app
+bun run test                   # Run all tests (Vitest, all workspaces)
 bun run check-types            # TypeScript checks across monorepo
 bun run check                  # Oxlint + Oxfmt (lint & format)
 ```
@@ -47,6 +48,25 @@ The webview hook `use-electrobun-rpc.ts` wraps RPC with a subscription system fo
 ### State Management
 
 `use-file-state.ts` manages file path, content, dirty flag, and save status. State persists to localStorage so the popup retains context across hide/show cycles. On mount (and on `windowShown`), the file is re-read from disk to pick up external changes.
+
+## Testing
+
+Tests use **Vitest** + **React Testing Library**. Run with `bun run test` at the root (runs all workspaces via Turbo).
+
+**Conventions:**
+- Unit tests are **colocated** with their implementation file (e.g., `button.tsx` → `button.test.tsx`)
+- Integration tests live in `src/__tests__/integration/`
+- Setup files (`src/__tests__/setup.ts`) register jest-dom matchers and polyfills for jsdom
+
+**Per-workspace approach:**
+- `packages/ui/` — unit tests for each component and utility
+- `apps/web/` — unit tests colocated with hooks/components; integration tests in `src/__tests__/integration/` (full `<App />` render with mocked RPC and MDXEditor)
+- `apps/desktop/` — unit tests colocated in `src/bun/lib/` for extracted pure-logic modules (`config.ts`, `window-position.ts`)
+
+**Mocking notes:**
+- `@mdxeditor/editor` is mocked in web integration tests (requires a real browser layout engine)
+- `electrobun/view` is never imported in tests — the hook detects the non-Electrobun environment and uses its built-in mock fallback
+- `Bun` global and `fs/promises` are stubbed in desktop tests via `vi.stubGlobal` / `vi.mock`
 
 ## Key Conventions
 
