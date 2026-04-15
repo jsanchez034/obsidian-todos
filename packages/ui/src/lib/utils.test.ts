@@ -12,6 +12,7 @@ describe("cn", () => {
   });
 
   it("handles conditional/falsy inputs", () => {
+    // oxlint-disable-next-line no-constant-binary-expression
     expect(cn("foo", false && "bar", undefined, null, "baz")).toBe("foo baz");
   });
 

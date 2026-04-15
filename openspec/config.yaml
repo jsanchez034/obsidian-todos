@@ -1,20 +1,50 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
 context: |
   Tech stack: See docs/architecture.md
   We use conventional commits
-  Domain: Desktop productivity app
+  Domain: Desktop productivity app (macOS menu bar markdown editor)
+  Package manager: Bun (not npm/yarn/pnpm)
+  Linter/formatter: Oxlint + Oxfmt (not ESLint/Prettier)
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  ## Implementation workflow
+  The agent-skills plugin (agent-skills@addy-agent-skills) is installed.
+  Use OpenSpec for defining and specifying changes (explore, propose).
+  Use agent-skills for implementation and beyond:
+    - /build  — incremental-implementation (thin vertical slices, test each)
+    - /test   — test-driven-development (Red-Green-Refactor, 80/15/5 pyramid)
+    - /review — code-review-and-quality (five-axis review, ~100-line changes)
+    - /code-simplify — code-simplification (reduce complexity, preserve behavior)
+    - /ship   — shipping-and-launch (pre-launch checklist, staged rollout)
+  Additional skills invoked as needed:
+    - frontend-ui-engineering (WCAG 2.1 AA, component architecture)
+    - api-and-interface-design (contract-first, Hyrum's Law)
+    - security-and-hardening (OWASP Top 10, input validation)
+    - performance-optimization (measure first, Core Web Vitals)
+    - debugging-and-error-recovery (reproduce → localize → fix → guard)
+    - git-workflow-and-versioning (atomic commits, trunk-based dev)
+    - documentation-and-adrs (ADRs for architectural decisions)
+
+rules:
+  proposal:
+    - Include a "Skills needed" section listing which agent-skills phases apply (build, test, review, ship)
+    - Identify security, performance, or accessibility concerns that need specialized skills
+
+  specs:
+    - Write testable acceptance criteria suitable for /test (test-driven-development)
+    - Use Given/When/Then format for behavioral specs
+    - Flag UI specs with accessibility requirements for frontend-ui-engineering
+    - Reference existing patterns in the codebase before inventing new ones
+
+  design:
+    - Include a "Implementation approach" section mapping work to agent-skills (/build, /test, /review)
+    - Flag security considerations for security-and-hardening review
+    - Flag performance-sensitive areas for performance-optimization
+    - Reference existing utilities and shared packages before creating new ones
+
+  tasks:
+    - Each task should be a thin vertical slice implementable via /build (incremental-implementation)
+    - Every task must include a verification method (unit test, browser test, type check)
+    - Tag tasks with the appropriate agent-skill, e.g. /build, /test, /review
+    - Testing tasks should use /test (test-driven-development with Red-Green-Refactor)
+    - Order tasks by dependency, with each task independently verifiable

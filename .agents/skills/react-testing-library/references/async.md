@@ -210,7 +210,7 @@ test("shows error on failure", async () => {
   server.use(
     rest.get("/api/data", (req, res, ctx) => {
       return res(ctx.status(500));
-    })
+    }),
   );
 
   render(<DataComponent />);
