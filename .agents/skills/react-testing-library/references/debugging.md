@@ -229,7 +229,7 @@ await waitFor(
     screen.debug();
     expect(element).toBeInTheDocument();
   },
-  { timeout: 5000 },
+  { timeout: 5000 }
 );
 ```
 
