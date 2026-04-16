@@ -25,7 +25,9 @@ describe("Button", () => {
     (variant) => {
       const classes = buttonVariants({ variant });
       expect(classes).toBeTruthy();
-      expect(classes).not.toBe(buttonVariants({ variant: variant === "default" ? "ghost" : "default" }));
+      expect(classes).not.toBe(
+        buttonVariants({ variant: variant === "default" ? "ghost" : "default" }),
+      );
     },
   );
 

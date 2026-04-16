@@ -20,12 +20,20 @@ describe("Card", () => {
   });
 
   it("renders with sm size", () => {
-    render(<Card data-testid="card" size="sm">Content</Card>);
+    render(
+      <Card data-testid="card" size="sm">
+        Content
+      </Card>,
+    );
     expect(screen.getByTestId("card")).toHaveAttribute("data-size", "sm");
   });
 
   it("merges custom className", () => {
-    render(<Card data-testid="card" className="custom">Content</Card>);
+    render(
+      <Card data-testid="card" className="custom">
+        Content
+      </Card>,
+    );
     expect(screen.getByTestId("card")).toHaveClass("custom");
   });
 });

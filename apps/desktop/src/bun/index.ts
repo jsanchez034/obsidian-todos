@@ -1,5 +1,5 @@
 import { watch, type FSWatcher } from "fs";
-import { join } from "path";
+import { basename, join } from "path";
 import {
   ApplicationMenu,
   BrowserView,
@@ -12,6 +12,7 @@ import {
 } from "electrobun/bun";
 import type { AppRPCSchema } from "../../../web/src/lib/rpc-schema";
 import { loadConfig, ensureConfig } from "./lib/config";
+import { loadState, removeRecentFile, trackRecentFile } from "./lib/state";
 import { calculatePopupPosition } from "./lib/window-position";
 
 // Hide dock icon — this is a menu bar-only app
@@ -29,6 +30,7 @@ function getConfigDir(): string {
 }
 const CONFIG_DIR = getConfigDir();
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
+const STATE_PATH = join(CONFIG_DIR, "state.json");
 
 // Track whether a file has been opened (so we know if popup toggle makes sense)
 let hasFileLoaded = false;
@@ -173,17 +175,8 @@ function hidePopup() {
   }
 }
 
-// Open file dialog directly from the main process (for tray menu "Open File...")
-async function openFileFromTray() {
-  const paths = await Utils.openFileDialog({
-    startingFolder: "~/",
-    allowedFileTypes: "md",
-    canChooseFiles: true,
-    canChooseDirectory: false,
-    allowsMultipleSelection: false,
-  });
-  if (!paths || paths.length === 0) return;
-  const filePath = paths[0]!;
+// Open a file by its path — shared by tray menu "Open File..." and recent file clicks
+async function openFileByPath(filePath: string) {
   const content = await Bun.file(filePath).text();
   hasFileLoaded = true;
   startWatching(filePath);
@@ -202,6 +195,37 @@ async function openFileFromTray() {
   }
 }
 
+// Open file dialog directly from the main process (for tray menu "Open File...")
+async function openFileFromTray() {
+  const paths = await Utils.openFileDialog({
+    startingFolder: "~/",
+    allowedFileTypes: "md",
+    canChooseFiles: true,
+    canChooseDirectory: false,
+    allowsMultipleSelection: false,
+  });
+  if (!paths || paths.length === 0) return;
+  const filePath = paths[0]!;
+  await trackRecentFile(STATE_PATH, filePath);
+  await openFileByPath(filePath);
+}
+
+// Open a recent file, handling missing files with a notification
+async function openRecentFile(filePath: string) {
+  const file = Bun.file(filePath);
+  if (!(await file.exists())) {
+    await removeRecentFile(STATE_PATH, filePath);
+    Utils.showNotification({
+      title: "File not found",
+      body: `${basename(filePath)} has been removed from recent files.`,
+      silent: true,
+    });
+    return;
+  }
+  await trackRecentFile(STATE_PATH, filePath);
+  await openFileByPath(filePath);
+}
+
 function togglePopup() {
   if (hasFileLoaded && popupWindow && !popupWindow.isMinimized()) {
     hidePopup();
@@ -212,13 +236,30 @@ function togglePopup() {
   }
 }
 
-function showTrayContextMenu() {
-  ContextMenu.showContextMenu([
-    { type: "normal", label: "Open File...", action: "open-file" },
-    { type: "normal", label: "Preferences...", action: "preferences" },
-    { type: "separator" },
-    { type: "normal", label: "Quit", action: "quit" },
-  ]);
+async function showTrayContextMenu() {
+  const state = await loadState(STATE_PATH);
+  const menuItems: any[] = [{ type: "normal", label: "Open File...", action: "open-file" }];
+
+  if (state.recentFiles.length > 0) {
+    menuItems.push({ type: "separator" });
+    menuItems.push({
+      type: "normal",
+      label: "Recent",
+      submenu: state.recentFiles.map((filePath) => ({
+        type: "normal",
+        label: basename(filePath),
+        action: "open-recent",
+        data: { path: filePath },
+      })),
+    });
+  }
+
+  menuItems.push({ type: "separator" });
+  menuItems.push({ type: "normal", label: "Preferences...", action: "preferences" });
+  menuItems.push({ type: "separator" });
+  menuItems.push({ type: "normal", label: "Quit", action: "quit" });
+
+  ContextMenu.showContextMenu(menuItems);
 }
 
 // Handle context menu item clicks
@@ -230,6 +271,10 @@ ContextMenu.on("context-menu-clicked", (event: any) => {
   }
   if (action === "open-file") {
     openFileFromTray();
+  }
+  if (action === "open-recent") {
+    const filePath = event?.data?.data?.path;
+    if (filePath) openRecentFile(filePath);
   }
   if (action === "preferences") {
     Bun.spawn(["open", CONFIG_PATH]);
@@ -247,6 +292,11 @@ tray.on("tray-clicked", (event: any) => {
   }
   if (action === "open-file") {
     openFileFromTray();
+    return;
+  }
+  if (action === "open-recent") {
+    const filePath = event?.data?.data?.path;
+    if (filePath) openRecentFile(filePath);
     return;
   }
   if (action === "preferences") {
