@@ -100,6 +100,10 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           return false;
         }
       },
+      getConfig: async () => {
+        const config = await loadConfig(CONFIG_PATH);
+        return { theme: config.theme, scanlines: config.scanlines };
+      },
     },
     messages: {
       webviewReady: () => {
@@ -354,12 +358,19 @@ async function registerHotkey() {
 await ensureConfig(CONFIG_DIR, CONFIG_PATH);
 await registerHotkey();
 
-// Watch config file for live hotkey changes
+// Watch config file for live hotkey and theme changes
 let configDebounce: ReturnType<typeof setTimeout> | null = null;
 watch(CONFIG_PATH, { persistent: false }, () => {
   if (configDebounce) clearTimeout(configDebounce);
-  configDebounce = setTimeout(() => {
+  configDebounce = setTimeout(async () => {
     registerHotkey();
+    const config = await loadConfig(CONFIG_PATH);
+    if (popupWindow) {
+      popupWindow.webview.rpc!.send.configChanged({
+        theme: config.theme,
+        scanlines: config.scanlines,
+      });
+    }
   }, 300);
 });
 

@@ -53,6 +53,7 @@ beforeEach(() => {
     openFile: vi.fn(async () => null),
     readFile: vi.fn(async () => ""),
     saveFile: vi.fn(async () => true),
+    getConfig: vi.fn(async () => ({ scanlines: true as const })),
     subscribe: vi.fn((event: string, callback: (data: any) => void) => {
       if (!subscriptions.has(event)) subscriptions.set(event, new Set());
       subscriptions.get(event)!.add(callback);

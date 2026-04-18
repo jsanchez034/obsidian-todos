@@ -9,6 +9,7 @@ function createMockRpc(overrides: Partial<RpcClient> = {}): RpcClient {
     openFile: vi.fn(async () => null),
     readFile: vi.fn(async () => ""),
     saveFile: vi.fn(async () => true),
+    getConfig: vi.fn(async () => ({ scanlines: true as const })),
     subscribe: vi.fn(() => () => {}),
     isElectrobun: false,
     ...overrides,

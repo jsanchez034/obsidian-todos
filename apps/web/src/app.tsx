@@ -5,14 +5,16 @@ import { Toaster } from "@obsidian-todos/ui/components/sonner";
 
 import { FileToolbar } from "@/components/file-toolbar";
 import { MarkdownEditor } from "@/components/markdown-editor";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider, useTheme } from "@/components/theme-provider";
 import { useElectrobunRpc } from "@/hooks/use-electrobun-rpc";
 import { useFileState } from "@/hooks/use-file-state";
 
-export function App() {
+function AppContent() {
   const rpc = useElectrobunRpc();
+  const { theme, setTheme } = useTheme();
   const { state, setFile, setContent, setSaveStatus } = useFileState(rpc);
   const editorRef = useRef<MDXEditorMethods>(null);
+  const scanlinesRef = useRef<boolean>(true);
 
   // Use refs to always have the latest values in async callbacks
   const stateRef = useRef(state);
@@ -52,6 +54,24 @@ export function App() {
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [performSave]);
+
+  // Load config from desktop on mount — applies theme default and scanlines
+  useEffect(() => {
+    rpc.getConfig().then((config) => {
+      if (config.theme) setTheme(config.theme);
+      scanlinesRef.current = config.scanlines;
+      document.documentElement.dataset.scanlines = String(config.scanlines);
+    });
+  }, [rpc, setTheme]);
+
+  // Subscribe to live config changes from desktop
+  useEffect(() => {
+    return rpc.subscribe("configChanged", (data: { theme?: string; scanlines: boolean }) => {
+      if (data.theme) setTheme(data.theme);
+      scanlinesRef.current = data.scanlines;
+      document.documentElement.dataset.scanlines = String(data.scanlines);
+    });
+  }, [rpc, setTheme]);
 
   // Subscribe to file opened from tray menu
   useEffect(() => {
@@ -105,24 +125,51 @@ export function App() {
     return () => document.removeEventListener("visibilitychange", handler);
   }, [rpc, setFile]);
 
+  const isNasa = theme === "nasa";
+
+  const emptyState = isNasa ? (
+    <div className="flex h-full flex-col items-center justify-center gap-2 font-mono">
+      <p className="text-sm tracking-widest" style={{ color: "oklch(0.78 0.18 85)" }}>
+        MISSION CONTROL — AWAITING INPUT
+      </p>
+      <p className="text-xs" style={{ color: "oklch(0.45 0.12 142)" }}>
+        &gt; Open a file from the tray menu
+      </p>
+      <p className="text-xs" style={{ color: "oklch(0.45 0.12 142)" }}>
+        &gt; to begin transmission
+      </p>
+    </div>
+  ) : (
+    <div className="flex h-full items-center justify-center text-muted-foreground">
+      <p>Open a file from the tray icon menu</p>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+      <FileToolbar filePath={state.filePath} saveStatus={state.saveStatus} />
+      <div
+        className={`relative flex-1 overflow-auto${isNasa ? " nasa-editor-container" : ""}`}
+        data-scanlines={isNasa ? String(scanlinesRef.current) : undefined}
+      >
+        {!state.filePath ? (
+          emptyState
+        ) : (
+          <MarkdownEditor
+            ref={editorRef}
+            content={state.content}
+            onContentChange={handleContentChange}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" storageKey="obsidian-todos-theme">
-      <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
-        <FileToolbar filePath={state.filePath} saveStatus={state.saveStatus} />
-        <div className="flex-1 overflow-auto">
-          {!state.filePath ? (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              <p>Open a file from the tray icon menu</p>
-            </div>
-          ) : (
-            <MarkdownEditor
-              ref={editorRef}
-              content={state.content}
-              onContentChange={handleContentChange}
-            />
-          )}
-        </div>
-      </div>
+      <AppContent />
       <Toaster />
     </ThemeProvider>
   );

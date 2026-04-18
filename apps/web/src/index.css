@@ -35,6 +35,130 @@
   background: var(--basePageBg);
 }
 
+.nasa-editor {
+  /* MDXEditor internal variables — green-on-black palette */
+  --accentBase: oklch(0.08 0.02 140);
+  --accentBgSubtle: oklch(0.1 0.03 140);
+  --accentBg: oklch(0.12 0.04 140);
+  --accentBgHover: oklch(0.15 0.05 140);
+  --accentBgActive: oklch(0.18 0.06 140);
+  --accentLine: oklch(0.25 0.08 140);
+  --accentBorder: oklch(0.3 0.1 142);
+  --accentBorderHover: oklch(0.4 0.15 142);
+  --accentSolid: oklch(0.85 0.25 142);
+  --accentSolidHover: oklch(0.9 0.22 142);
+  --accentText: oklch(0.85 0.25 142);
+  --accentTextContrast: oklch(0.95 0.2 142);
+
+  --baseBase: oklch(0.08 0.02 140);
+  --baseBgSubtle: oklch(0.1 0.02 140);
+  --baseBg: oklch(0.1 0.02 140);
+  --baseBgHover: oklch(0.14 0.03 140);
+  --baseBgActive: oklch(0.17 0.03 140);
+  --baseLine: oklch(0.2 0.04 140);
+  --baseBorder: oklch(0.2 0.05 142);
+  --baseBorderHover: oklch(0.28 0.08 142);
+  --baseSolid: oklch(0.45 0.12 142);
+  --baseSolidHover: oklch(0.55 0.15 142);
+  --baseText: oklch(0.85 0.25 142);
+  --baseTextContrast: oklch(0.92 0.22 142);
+
+  --basePageBg: oklch(0.08 0.02 140);
+  color: var(--baseText);
+  background: var(--basePageBg);
+  font-family: "IBM Plex Mono", monospace;
+  caret-color: oklch(0.85 0.25 142);
+}
+
+/* NASA editor container — green glow */
+.nasa-editor-container {
+  position: relative;
+  box-shadow:
+    0 0 0 1px oklch(0.2 0.05 142),
+    0 0 20px oklch(0.85 0.25 142 / 0.06),
+    0 0 60px oklch(0.85 0.25 142 / 0.03);
+}
+
+/* NASA scanline overlay */
+.nasa-editor-container[data-scanlines="true"]::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: repeating-linear-gradient(
+    0deg,
+    oklch(0 0 0 / 0.12) 0px,
+    oklch(0 0 0 / 0.12) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* NASA prose typography overrides */
+.nasa-editor .prose {
+  font-family: "IBM Plex Mono", monospace;
+  color: oklch(0.85 0.25 142);
+
+  /* Headings — amber */
+  & h1,
+  & h2,
+  & h3,
+  & h4,
+  & h5,
+  & h6 {
+    color: oklch(0.78 0.18 85);
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Links — cyan */
+  & a {
+    color: oklch(0.7 0.15 195);
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  /* Bold — bright green */
+  & strong {
+    color: oklch(0.95 0.2 142);
+    font-weight: 700;
+  }
+
+  /* Italic — dim green */
+  & em {
+    color: oklch(0.6 0.18 142);
+    font-style: italic;
+  }
+
+  /* Blockquotes — green left border */
+  & blockquote {
+    border-left: 2px solid oklch(0.45 0.12 142);
+    color: oklch(0.65 0.2 142);
+    background: transparent;
+    padding-left: 1rem;
+    font-style: normal;
+  }
+
+  /* Code — brighter green on slightly lighter bg */
+  & code,
+  & pre {
+    background: oklch(0.12 0.03 140);
+    color: oklch(0.92 0.22 142);
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  /* HR — dashed green line */
+  & hr {
+    border: none;
+    border-top: 1px dashed oklch(0.35 0.1 142);
+  }
+}
+
 /* Vertically center MDXEditor checkbox with text */
 .prose {
   & li[role="checkbox"] {

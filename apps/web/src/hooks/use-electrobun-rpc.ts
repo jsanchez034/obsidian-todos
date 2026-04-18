@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import type { AppRPCSchema } from "@/lib/rpc-schema";
+import type { AppRPCSchema, AppTheme } from "@/lib/rpc-schema";
 
 export interface RpcClient {
   openFile: () => Promise<{ path: string; content: string } | null>;
   readFile: (path: string) => Promise<string>;
   saveFile: (path: string, content: string) => Promise<boolean>;
+  getConfig: () => Promise<{ theme?: AppTheme; scanlines: boolean }>;
   subscribe: (event: string, callback: (data: any) => void) => () => void;
   isElectrobun: boolean;
 }
@@ -43,6 +44,7 @@ async function initElectroview() {
           fileOpened: (data: any) => emit("fileOpened", data),
           fileChanged: (data: any) => emit("fileChanged", data),
           windowShown: () => emit("windowShown", {}),
+          configChanged: (data: any) => emit("configChanged", data),
         },
       },
     });
@@ -75,6 +77,10 @@ const mockRpc: RpcClient = {
     console.log("[mock] saveFile called — not in Electrobun");
     return false;
   },
+  getConfig: async () => {
+    console.log("[mock] getConfig called — not in Electrobun");
+    return { scanlines: true };
+  },
   subscribe: () => () => {},
   isElectrobun: false,
 };
@@ -98,6 +104,11 @@ function createElectrobunRpc(): RpcClient {
       const rpc = await initElectroview();
       if (!rpc) return false;
       return rpc.request.saveFile({ path, content });
+    },
+    getConfig: async () => {
+      const rpc = await initElectroview();
+      if (!rpc) return { scanlines: true };
+      return rpc.request.getConfig();
     },
     subscribe,
     isElectrobun: true,
