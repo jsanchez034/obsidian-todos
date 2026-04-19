@@ -30,7 +30,7 @@ describe("loadConfig", () => {
   it("merges file config with defaults", async () => {
     mockFileText.mockResolvedValue(JSON.stringify({ hotkey: "Alt+T" }));
     const config = await loadConfig("/path/to/config.json");
-    expect(config).toEqual({ hotkey: "Alt+T" });
+    expect(config).toEqual({ hotkey: "Alt+T", scanlines: false });
   });
 
   it("preserves defaults for missing keys in file", async () => {
@@ -43,6 +43,38 @@ describe("loadConfig", () => {
     mockFileText.mockResolvedValue("not json{{{");
     const config = await loadConfig("/path/to/config.json");
     expect(config).toEqual(DEFAULT_CONFIG);
+  });
+
+  it("returns theme from config when valid", async () => {
+    mockFileText.mockResolvedValue(JSON.stringify({ theme: "nasa" }));
+    const config = await loadConfig("/path/to/config.json");
+    expect(config.theme).toBe("nasa");
+  });
+
+  it("returns undefined theme for invalid value", async () => {
+    mockFileText.mockResolvedValue(JSON.stringify({ theme: "invalid" }));
+    const config = await loadConfig("/path/to/config.json");
+    expect(config.theme).toBeUndefined();
+  });
+
+  it("accepts all valid theme values", async () => {
+    for (const theme of ["light", "dark", "nasa"]) {
+      mockFileText.mockResolvedValue(JSON.stringify({ theme }));
+      const config = await loadConfig("/path/to/config.json");
+      expect(config.theme).toBe(theme);
+    }
+  });
+
+  it("defaults scanlines to false when absent", async () => {
+    mockFileText.mockResolvedValue(JSON.stringify({ hotkey: "Alt+T" }));
+    const config = await loadConfig("/path/to/config.json");
+    expect(config.scanlines).toBe(false);
+  });
+
+  it("passes scanlines false from config", async () => {
+    mockFileText.mockResolvedValue(JSON.stringify({ scanlines: false }));
+    const config = await loadConfig("/path/to/config.json");
+    expect(config.scanlines).toBe(false);
   });
 });
 

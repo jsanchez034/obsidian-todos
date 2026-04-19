@@ -5,6 +5,7 @@
 @source "../**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant nasa (&:is(.nasa *));
 
 :root {
   --background: oklch(1 0 0);
@@ -76,8 +77,43 @@
   --secondary-foreground: oklch(0.907 0 0);
 }
 
+.nasa {
+  /* Phosphor green on deep dark green-black */
+  --background: oklch(0.08 0.02 140);
+  --foreground: oklch(0.85 0.25 142);
+  --card: oklch(0.1 0.02 140);
+  --card-foreground: oklch(0.85 0.25 142);
+  --popover: oklch(0.1 0.02 140);
+  --popover-foreground: oklch(0.85 0.25 142);
+  /* Amber primary */
+  --primary: oklch(0.78 0.18 85);
+  --primary-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.14 0.03 140);
+  --secondary-foreground: oklch(0.85 0.25 142);
+  --muted: oklch(0.14 0.03 140);
+  --muted-foreground: oklch(0.45 0.12 142);
+  /* Cyan accent */
+  --accent: oklch(0.7 0.15 195);
+  --accent-foreground: oklch(0.08 0.02 140);
+  --destructive: oklch(0.65 0.25 25);
+  --border: oklch(0.2 0.05 142);
+  --input: oklch(0.2 0.05 142);
+  --ring: oklch(0.85 0.25 142);
+  --radius: 0.125rem;
+  --sidebar: oklch(0.1 0.02 140);
+  --sidebar-foreground: oklch(0.85 0.25 142);
+  --sidebar-primary: oklch(0.78 0.18 85);
+  --sidebar-primary-foreground: oklch(0.15 0 0);
+  --sidebar-accent: oklch(0.14 0.03 140);
+  --sidebar-accent-foreground: oklch(0.85 0.25 142);
+  --sidebar-border: oklch(0.2 0.05 142);
+  --sidebar-ring: oklch(0.85 0.25 142);
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
 @theme inline {
   --font-sans: "Inter Variable", sans-serif;
+  --font-mono: monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -127,5 +163,9 @@
   }
   html {
     @apply font-sans;
+  }
+  .nasa body,
+  .nasa html {
+    font-family: var(--font-mono);
   }
 }

@@ -22,22 +22,23 @@ interface MarkdownEditorProps {
 export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(
   function MarkdownEditor({ content, onContentChange }, ref) {
     const { theme } = useTheme();
+    const isNasa = theme === "nasa";
     const isDark =
+      isNasa ||
       theme === "dark" ||
       (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-    return (
-      <MDXEditor
-        ref={ref}
-        markdown={content}
-        onChange={onContentChange}
-        className={isDark ? "dark-theme dark-editor" : ""}
-        contentEditableClassName="prose dark:prose-invert"
-        plugins={[
-          headingsPlugin(),
-          listsPlugin(),
-          markdownShortcutPlugin(),
-          diffSourcePlugin({ viewMode: "rich-text" }),
+    const basePlugins = [
+      headingsPlugin(),
+      listsPlugin(),
+      markdownShortcutPlugin(),
+      diffSourcePlugin({ viewMode: "rich-text" }),
+    ];
+
+    const plugins = isNasa
+      ? basePlugins
+      : [
+          ...basePlugins,
           toolbarPlugin({
             toolbarContents: () => (
               <DiffSourceToggleWrapper>
@@ -47,7 +48,18 @@ export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(
               </DiffSourceToggleWrapper>
             ),
           }),
-        ]}
+        ];
+
+    const editorClass = isNasa ? "dark-theme nasa-editor" : isDark ? "dark-theme dark-editor" : "";
+
+    return (
+      <MDXEditor
+        ref={ref}
+        markdown={content}
+        onChange={onContentChange}
+        className={editorClass}
+        contentEditableClassName="prose dark:prose-invert"
+        plugins={plugins}
       />
     );
   },

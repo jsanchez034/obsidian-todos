@@ -2,6 +2,8 @@
 // The actual Electrobun RPCSchema/ElectrobunRPCSchema types are structurally
 // compatible with this definition.
 
+export type AppTheme = "light" | "dark" | "nasa";
+
 export interface AppRPCSchema {
   bun: {
     requests: {
@@ -14,6 +16,10 @@ export interface AppRPCSchema {
         params: { path: string; content: string };
         response: boolean;
       };
+      getConfig: {
+        params: void;
+        response: { theme?: AppTheme; scanlines: boolean };
+      };
     };
     messages: {
       webviewReady: {};
@@ -25,6 +31,7 @@ export interface AppRPCSchema {
       fileOpened: { path: string; content: string };
       fileChanged: { path: string; content: string };
       windowShown: {};
+      configChanged: { theme?: AppTheme; scanlines: boolean };
     };
   };
 }

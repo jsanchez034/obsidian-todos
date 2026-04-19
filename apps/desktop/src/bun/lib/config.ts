@@ -1,11 +1,29 @@
 import { mkdir } from "fs/promises";
 
-export const DEFAULT_CONFIG = { hotkey: "CommandOrControl+Shift+T" };
+const VALID_THEMES = ["light", "dark", "nasa"] as const;
+type Theme = (typeof VALID_THEMES)[number];
 
-export async function loadConfig(configPath: string): Promise<typeof DEFAULT_CONFIG> {
+export interface AppConfig {
+  hotkey: string;
+  scanlines: boolean;
+  theme?: Theme;
+}
+
+export const DEFAULT_CONFIG: AppConfig = {
+  hotkey: "CommandOrControl+Shift+T",
+  scanlines: false,
+};
+
+export async function loadConfig(configPath: string): Promise<AppConfig> {
   try {
     const text = await Bun.file(configPath).text();
-    return { ...DEFAULT_CONFIG, ...JSON.parse(text) };
+    const parsed = JSON.parse(text);
+    const theme = VALID_THEMES.includes(parsed.theme) ? (parsed.theme as Theme) : undefined;
+    return {
+      ...DEFAULT_CONFIG,
+      ...parsed,
+      theme,
+    };
   } catch {
     return { ...DEFAULT_CONFIG };
   }

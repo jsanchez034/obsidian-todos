@@ -54,18 +54,22 @@ For remaining skills, list them under "Additional skills applied as needed" with
 Update rules for each artifact type. The critical constraints:
 
 **`proposal` rules:**
+
 - Must reference skills by their actual names from SKILL.md
 - Must require a "Skills needed" section
 
 **`specs` rules:**
+
 - Must connect acceptance criteria to test-driven-development (scenarios should become failing tests)
 - Must reference frontend-ui-engineering for accessibility when applicable
 
 **`design` rules:**
+
 - Must require an "Implementation approach" section using skill names and process phases (e.g. "test-driven-development RED")
 - Must enforce TDD ordering: RED phases before GREEN phases
 
 **`tasks` rules (most critical):**
+
 - Must enforce test-driven-development ordering: RED tasks (write failing tests) BEFORE GREEN tasks (implement to pass). This is the single most important rule.
 - Tasks must describe the process to follow, not just what to build. The task description must include the TDD phase.
 - Tasks must be tagged with skill name and phase, e.g. `(test-driven-development: RED)`, `(incremental-implementation)`
