@@ -11,7 +11,7 @@ export interface AppConfig {
 
 export const DEFAULT_CONFIG: AppConfig = {
   hotkey: "CommandOrControl+Shift+T",
-  scanlines: true,
+  scanlines: false,
 };
 
 export async function loadConfig(configPath: string): Promise<AppConfig> {

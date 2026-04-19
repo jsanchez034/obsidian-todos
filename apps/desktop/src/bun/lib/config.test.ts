@@ -30,7 +30,7 @@ describe("loadConfig", () => {
   it("merges file config with defaults", async () => {
     mockFileText.mockResolvedValue(JSON.stringify({ hotkey: "Alt+T" }));
     const config = await loadConfig("/path/to/config.json");
-    expect(config).toEqual({ hotkey: "Alt+T", scanlines: true });
+    expect(config).toEqual({ hotkey: "Alt+T", scanlines: false });
   });
 
   it("preserves defaults for missing keys in file", async () => {
@@ -65,10 +65,10 @@ describe("loadConfig", () => {
     }
   });
 
-  it("defaults scanlines to true when absent", async () => {
+  it("defaults scanlines to false when absent", async () => {
     mockFileText.mockResolvedValue(JSON.stringify({ hotkey: "Alt+T" }));
     const config = await loadConfig("/path/to/config.json");
-    expect(config.scanlines).toBe(true);
+    expect(config.scanlines).toBe(false);
   });
 
   it("passes scanlines false from config", async () => {

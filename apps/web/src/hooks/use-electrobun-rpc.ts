@@ -116,7 +116,7 @@ function createElectrobunRpc(): RpcClient {
     },
     getConfig: async () => {
       const rpc = await initElectroview();
-      if (!rpc) return { scanlines: true };
+      if (!rpc) return { scanlines: false };
       return rpc.request.getConfig();
     },
     subscribe,

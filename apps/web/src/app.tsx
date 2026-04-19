@@ -147,7 +147,7 @@ function AppContent() {
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       <FileToolbar filePath={state.filePath} saveStatus={state.saveStatus} />
       <div
-        className={`relative flex-1 overflow-auto${isNasa ? " nasa-editor-container" : ""}`}
+        className={`relative flex-1 overflow-y-auto${isNasa ? " nasa-editor-container" : ""}`}
         data-scanlines={String(scanlines)}
       >
         {!state.filePath ? (
