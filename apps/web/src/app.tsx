@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MDXEditorMethods } from "@mdxeditor/editor";
 
 import { Toaster } from "@obsidian-todos/ui/components/sonner";
@@ -13,8 +13,8 @@ function AppContent() {
   const rpc = useElectrobunRpc();
   const { theme, setTheme } = useTheme();
   const { state, setFile, setContent, setSaveStatus } = useFileState(rpc);
+  const [scanlines, setScanlines] = useState(false);
   const editorRef = useRef<MDXEditorMethods>(null);
-  const scanlinesRef = useRef<boolean>(true);
 
   // Use refs to always have the latest values in async callbacks
   const stateRef = useRef(state);
@@ -58,20 +58,18 @@ function AppContent() {
   // Load config from desktop on mount — applies theme default and scanlines
   useEffect(() => {
     rpc.getConfig().then((config) => {
-      if (config.theme) setTheme(config.theme);
-      scanlinesRef.current = config.scanlines;
-      document.documentElement.dataset.scanlines = String(config.scanlines);
+      if (config.theme !== undefined) setTheme(config.theme);
+      setScanlines(config.scanlines ?? false);
     });
-  }, [rpc, setTheme]);
+  }, [rpc, setScanlines, setTheme]);
 
   // Subscribe to live config changes from desktop
   useEffect(() => {
     return rpc.subscribe("configChanged", (data: { theme?: string; scanlines: boolean }) => {
-      if (data.theme) setTheme(data.theme);
-      scanlinesRef.current = data.scanlines;
-      document.documentElement.dataset.scanlines = String(data.scanlines);
+      if (data.theme !== undefined) setTheme(data.theme);
+      setScanlines(data.scanlines ?? false);
     });
-  }, [rpc, setTheme]);
+  }, [rpc, setScanlines, setTheme]);
 
   // Subscribe to file opened from tray menu
   useEffect(() => {
@@ -129,13 +127,13 @@ function AppContent() {
 
   const emptyState = isNasa ? (
     <div className="flex h-full flex-col items-center justify-center gap-2 font-mono">
-      <p className="text-sm tracking-widest" style={{ color: "oklch(0.78 0.18 85)" }}>
+      <p className="text-sm tracking-widest text-primary">
         MISSION CONTROL — AWAITING INPUT
       </p>
-      <p className="text-xs" style={{ color: "oklch(0.45 0.12 142)" }}>
+      <p className="text-xs text-muted-foreground">
         &gt; Open a file from the tray menu
       </p>
-      <p className="text-xs" style={{ color: "oklch(0.45 0.12 142)" }}>
+      <p className="text-xs text-muted-foreground">
         &gt; to begin transmission
       </p>
     </div>
@@ -150,7 +148,7 @@ function AppContent() {
       <FileToolbar filePath={state.filePath} saveStatus={state.saveStatus} />
       <div
         className={`relative flex-1 overflow-auto${isNasa ? " nasa-editor-container" : ""}`}
-        data-scanlines={isNasa ? String(scanlinesRef.current) : undefined}
+        data-scanlines={String(scanlines)}
       >
         {!state.filePath ? (
           emptyState

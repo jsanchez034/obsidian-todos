@@ -1,4 +1,3 @@
-import type React from "react";
 import { FileText } from "lucide-react";
 
 import { useTheme } from "@/components/theme-provider";
@@ -20,17 +19,12 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
       error: "FAULT",
     };
     const nasaStyles: Record<Exclude<SaveStatus, "idle">, string> = {
-      saving: "animate-pulse font-mono text-xs tracking-widest",
-      saved: "font-mono text-xs tracking-widest",
-      error: "animate-[blink_1s_step-end_infinite] font-mono text-xs tracking-widest",
-    };
-    const nasaColors: Record<Exclude<SaveStatus, "idle">, React.CSSProperties> = {
-      saving: { color: "oklch(0.78 0.18 85)" },
-      saved: { color: "oklch(0.85 0.25 142)" },
-      error: { color: "oklch(0.65 0.25 25)" },
+      saving: "animate-pulse font-mono text-xs tracking-widest text-primary",
+      saved: "font-mono text-xs tracking-widest text-foreground",
+      error: "animate-[blink_1s_step-end_infinite] font-mono text-xs tracking-widest text-destructive",
     };
     return (
-      <span className={nasaStyles[status]} style={nasaColors[status]}>
+      <span className={nasaStyles[status]}>
         ■ {nasaLabels[status]}
       </span>
     );
@@ -62,11 +56,10 @@ export function FileToolbar({ filePath, saveStatus }: FileToolbarProps) {
       <div className="flex flex-1 items-center gap-2 overflow-hidden">
         {filename && (
           <span
-            className={`flex items-center gap-1 truncate text-sm${isNasa ? " tracking-wide" : " text-muted-foreground"}`}
-            style={isNasa ? { color: "oklch(0.45 0.12 142)" } : undefined}
+            className={`flex items-center gap-1 truncate text-sm text-muted-foreground${isNasa ? " tracking-wide" : ""}`}
           >
             {isNasa ? (
-              <span style={{ color: "oklch(0.78 0.18 85)" }}>▸</span>
+              <span className="text-primary">▸</span>
             ) : (
               <FileText className="h-3.5 w-3.5 shrink-0" />
             )}
