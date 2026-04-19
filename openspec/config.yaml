@@ -1,6 +1,47 @@
 schema: spec-driven
 
 context: |
+  ## Agent-skills activation protocol (READ FIRST)
+
+  This project integrates the agent-skills@addy-agent-skills plugin. EVERY
+  task tagged with `(skill-name PHASE)` MUST activate that skill BEFORE any
+  code edits. Order is strict: invoke → follow the skill's process → edit
+  code. Never edit first.
+
+  **How to activate a skill (in priority order):**
+  1. Primary: call `Skill(skill="agent-skills:<name>")` and follow its steps.
+  2. Fallback: use the Read tool on the SKILL.md path below. If `$HOME` does
+     not resolve inside the Read tool, run `echo $HOME` via Bash first and
+     Read the resolved absolute path.
+
+  **Skill name → SKILL.md path (fallback for Read tool):**
+  - test-driven-development → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/test-driven-development/SKILL.md
+  - incremental-implementation → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/incremental-implementation/SKILL.md
+  - code-review-and-quality → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/code-review-and-quality/SKILL.md
+  - spec-driven-development → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/spec-driven-development/SKILL.md
+  - planning-and-task-breakdown → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/planning-and-task-breakdown/SKILL.md
+  - frontend-ui-engineering → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/frontend-ui-engineering/SKILL.md
+  - api-and-interface-design → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/api-and-interface-design/SKILL.md
+  - security-and-hardening → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/security-and-hardening/SKILL.md
+  - performance-optimization → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/performance-optimization/SKILL.md
+  - debugging-and-error-recovery → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/debugging-and-error-recovery/SKILL.md
+  - git-workflow-and-versioning → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/git-workflow-and-versioning/SKILL.md
+  - documentation-and-adrs → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/documentation-and-adrs/SKILL.md
+  - code-simplification → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/code-simplification/SKILL.md
+  - source-driven-development → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/source-driven-development/SKILL.md
+  - context-engineering → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/context-engineering/SKILL.md
+  - browser-testing-with-devtools → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/browser-testing-with-devtools/SKILL.md
+  - ci-cd-and-automation → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/ci-cd-and-automation/SKILL.md
+  - shipping-and-launch → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/shipping-and-launch/SKILL.md
+  - idea-refine → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/idea-refine/SKILL.md
+  - using-agent-skills → $HOME/.claude/plugins/marketplaces/addy-agent-skills/skills/using-agent-skills/SKILL.md
+
+  When in doubt about which skill applies, invoke
+  `Skill(skill="agent-skills:using-agent-skills")` first to consult the skill
+  discovery flowchart.
+
+  ## Project basics
+
   Tech stack: See docs/architecture.md
   We use conventional commits
   Domain: Desktop productivity app (macOS menu bar markdown editor)
@@ -65,7 +106,18 @@ rules:
   tasks:
     - "CRITICAL: Follow test-driven-development ordering. For every module with testable logic, the RED task (write failing tests) MUST come before the GREEN task (implement code to pass tests). Never generate implementation tasks before their corresponding test tasks."
     - Each task must describe the actual process to follow, not just what to build. Include the TDD phase in the task description (e.g. "Write failing unit tests for X — tests must fail since X does not exist yet" for RED, "Implement X with minimum code to make all tests pass" for GREEN).
-    - Tag each task with the agent-skill name and phase, e.g. (test-driven-development RED), (test-driven-development GREEN), (incremental-implementation), (code-review-and-quality)
+    - 'Each task MUST begin with "Invoke Skill agent-skills:<name>, then ..." where <name> is the applicable skill. End the task description with the parenthesized tag `(skill-name PHASE)` and a concrete `Verify:` command. Example: "Invoke Skill agent-skills:test-driven-development, then write failing unit tests for config.loadConfig covering theme validation. (test-driven-development RED) Verify: `bun run test` shows the new tests failing."'
+    - 'The inline invocation ("Invoke Skill agent-skills:<name>") is non-negotiable — do not emit tasks that only include the parenthesized tag, because tags alone have been observed to be ignored during /opsx:apply.'
     - Each task is a thin vertical slice per incremental-implementation — implement, test, verify, commit
     - 'Every task must end with a concrete runnable verification (e.g. "Verify: bun run test passes" or "Verify: bun run check-types passes"), not vague checks like "type-check passes"'
     - Order tasks by dependency, with each task independently verifiable and leaving the system in a working state
+
+  apply:
+    - 'CRITICAL: Before executing ANY task, parse the `(skill-name PHASE)` tag in the task description and invoke the named skill via `Skill(skill="agent-skills:<name>")`. If the Skill tool call is not available, run `echo $HOME` via Bash to resolve the home directory, then Read `<HOME>/.claude/plugins/marketplaces/addy-agent-skills/skills/<name>/SKILL.md` and follow its process.'
+    - 'Announce the invocation before editing code — e.g., "Activating agent-skills:test-driven-development for task 2.1" — so the user can see the skill was loaded. Do NOT jump straight to code edits.'
+    - 'For (test-driven-development RED) tasks: write ONLY the failing test. Run the Verify command to confirm it fails. Do NOT write implementation code in a RED task.'
+    - 'For (test-driven-development GREEN) tasks: write ONLY the minimum code to make the matching RED test pass. Do NOT add new test cases in a GREEN task.'
+    - 'For (incremental-implementation) tasks: edit, then run the Verify command. Do not start the next task until the current Verify passes. Each slice must leave the system in a working state.'
+    - 'For (code-review-and-quality) tasks: produce findings across all five axes (correctness, readability, architecture, security, performance) with file:line references and severity (Critical / Important / Suggestion).'
+    - 'Never batch multiple tasks'' edits before verifying. Every task ends with its Verify command passing before the checkbox flips to [x].'
+    - 'If implementation reveals a task is mis-tagged or the skill process cannot be followed as written, pause and suggest an artifact update (per openspec-apply-change Fluid Workflow Integration) instead of proceeding ad hoc.'
