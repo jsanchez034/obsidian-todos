@@ -127,15 +127,9 @@ function AppContent() {
 
   const emptyState = isNasa ? (
     <div className="flex h-full flex-col items-center justify-center gap-2 font-mono">
-      <p className="text-sm tracking-widest text-primary">
-        MISSION CONTROL — AWAITING INPUT
-      </p>
-      <p className="text-xs text-muted-foreground">
-        &gt; Open a file from the tray menu
-      </p>
-      <p className="text-xs text-muted-foreground">
-        &gt; to begin transmission
-      </p>
+      <p className="text-sm tracking-widest text-primary">MISSION CONTROL — AWAITING INPUT</p>
+      <p className="text-xs text-muted-foreground">&gt; Open a file from the tray menu</p>
+      <p className="text-xs text-muted-foreground">&gt; to begin transmission</p>
     </div>
   ) : (
     <div className="flex h-full items-center justify-center text-muted-foreground">

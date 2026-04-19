@@ -21,13 +21,10 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
     const nasaStyles: Record<Exclude<SaveStatus, "idle">, string> = {
       saving: "animate-pulse font-mono text-xs tracking-widest text-primary",
       saved: "font-mono text-xs tracking-widest text-foreground",
-      error: "animate-[blink_1s_step-end_infinite] font-mono text-xs tracking-widest text-destructive",
+      error:
+        "animate-[blink_1s_step-end_infinite] font-mono text-xs tracking-widest text-destructive",
     };
-    return (
-      <span className={nasaStyles[status]}>
-        ■ {nasaLabels[status]}
-      </span>
-    );
+    return <span className={nasaStyles[status]}>■ {nasaLabels[status]}</span>;
   }
 
   const labels: Record<SaveStatus, string> = {
