@@ -32,8 +32,10 @@ const CONFIG_DIR = getConfigDir();
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 const STATE_PATH = join(CONFIG_DIR, "state.json");
 
-// Track whether a file has been opened (so we know if popup toggle makes sense)
-let hasFileLoaded = false;
+// Path of the currently open file, or null if none. Persists across popup
+// window lifecycles — hiding the popup destroys the window, but we keep the
+// path so re-showing can re-hydrate the fresh webview.
+let currentFilePath: string | null = null;
 
 // Pending file to send to webview once it signals ready
 let pendingFile: { path: string; content: string } | null = null;
@@ -80,7 +82,7 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         if (!paths || paths.length === 0) return null;
         const filePath = paths[0]!;
         const content = await Bun.file(filePath).text();
-        hasFileLoaded = true;
+        currentFilePath = filePath;
         startWatching(filePath);
         return { path: filePath, content };
       },
@@ -106,10 +108,20 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
       },
     },
     messages: {
-      webviewReady: () => {
+      webviewReady: async () => {
         if (pendingFile) {
           popupWindow?.webview.rpc!.send.fileOpened(pendingFile);
           pendingFile = null;
+          return;
+        }
+        // Fresh window after hotkey/tray-click show — re-hydrate from disk
+        if (currentFilePath) {
+          try {
+            const content = await Bun.file(currentFilePath).text();
+            popupWindow?.webview.rpc!.send.fileOpened({ path: currentFilePath, content });
+          } catch {
+            // File may have been deleted externally — leave editor empty
+          }
         }
       },
     },
@@ -125,14 +137,17 @@ const tray = new Tray({
   height: 22,
 });
 
-// Popup window management
+// Popup window management.
+//
+// The popup is destroyed on hide (close) rather than minimized. This releases
+// OS-level focus immediately so the global hotkey fires on the next press —
+// minimize keeps focus during its animation, which caused WKWebView to swallow
+// Cmd+Shift+G as "Find Previous" (beep) and the global shortcut never fired.
 let popupWindow: BrowserWindow<typeof rpc> | null = null;
 
 function showPopup() {
   if (popupWindow) {
-    popupWindow.setAlwaysOnTop(true);
     popupWindow.show();
-    popupWindow.webview.rpc!.send.windowShown({});
     return;
   }
 
@@ -160,10 +175,7 @@ function showPopup() {
 
   popupWindow.setAlwaysOnTop(true);
   popupWindow.on("close", () => {
-    if (popupWindow?.isAlwaysOnTop()) {
-      popupWindow.setAlwaysOnTop(false);
-    }
-    popupWindow?.minimize();
+    popupWindow = null;
   });
   popupWindow.on("blur", () => {
     hidePopup();
@@ -171,29 +183,26 @@ function showPopup() {
 }
 
 function hidePopup() {
-  if (popupWindow) {
-    if (popupWindow?.isAlwaysOnTop()) {
-      popupWindow.setAlwaysOnTop(false);
-    }
-    popupWindow.minimize();
-  }
+  if (!popupWindow) return;
+  const w = popupWindow;
+  popupWindow = null;
+  w.close();
 }
 
 // Open a file by its path — shared by tray menu "Open File..." and recent file clicks
 async function openFileByPath(filePath: string) {
   const content = await Bun.file(filePath).text();
-  hasFileLoaded = true;
+  currentFilePath = filePath;
   startWatching(filePath);
 
   const fileData = { path: filePath, content };
-  const windowAlreadyExists = popupWindow !== null;
 
-  if (windowAlreadyExists) {
-    showPopup();
-    popupWindow!.webview.rpc!.send.fileOpened(fileData);
+  if (popupWindow) {
+    popupWindow.webview.rpc!.send.fileOpened(fileData);
+    popupWindow.show();
   } else {
-    // Window doesn't exist yet — store pending file and create window
-    // The webview will send webviewReady once mounted, triggering the pending file send
+    // Window doesn't exist yet — store pending file and create window.
+    // The webview will send webviewReady once mounted, triggering the pending file send.
     pendingFile = fileData;
     showPopup();
   }
@@ -231,9 +240,9 @@ async function openRecentFile(filePath: string) {
 }
 
 function togglePopup() {
-  if (hasFileLoaded && popupWindow && !popupWindow.isMinimized()) {
+  if (popupWindow) {
     hidePopup();
-  } else if (hasFileLoaded) {
+  } else if (currentFilePath) {
     showPopup();
   } else {
     showTrayContextMenu();
@@ -314,24 +323,36 @@ tray.on("tray-clicked", (event: any) => {
   }
 });
 
-// App menu for keyboard shortcuts
-ApplicationMenu.setApplicationMenu([
-  {
-    submenu: [{ label: "Quit", role: "quit" }],
-  },
-  {
-    label: "Edit",
-    submenu: [
-      { role: "undo" },
-      { role: "redo" },
-      { type: "separator" },
-      { role: "cut" },
-      { role: "copy" },
-      { role: "paste" },
-      { role: "selectAll" },
-    ],
-  },
-]);
+// The hotkey is bound twice: as a global shortcut (fires when app is inactive)
+// and as the App menu's Hide accelerator. Menu accelerators are dispatched by
+// AppKit before the key event reaches the focused webview, so pressing the
+// hotkey while the popup is focused:
+//   (a) doesn't beep (menu intercepts before WKWebView's Find Previous), and
+//   (b) synchronously calls NSApp hide:, deactivating the app so the next
+//       press fires the global shortcut instead of racing with close timing.
+function setApplicationMenuWithHotkey(hotkey: string) {
+  ApplicationMenu.setApplicationMenu([
+    {
+      submenu: [
+        { label: "Hide", role: "hide", accelerator: hotkey },
+        { type: "separator" },
+        { label: "Quit", role: "quit" },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" },
+      ],
+    },
+  ]);
+}
 
 // --- Global hotkey setup ---
 let currentHotkey: string | null = null;
@@ -345,13 +366,17 @@ async function registerHotkey() {
     currentHotkey = null;
   }
 
-  const registered = GlobalShortcut.register(hotkey, togglePopup);
+  const registered = GlobalShortcut.register(hotkey, () => {
+    togglePopup();
+  });
   if (registered) {
     currentHotkey = hotkey;
     console.log(`Global shortcut registered: ${hotkey}`);
   } else {
     console.error(`Failed to register global shortcut: ${hotkey}`);
   }
+
+  setApplicationMenuWithHotkey(hotkey);
 }
 
 // Initialize config and hotkey

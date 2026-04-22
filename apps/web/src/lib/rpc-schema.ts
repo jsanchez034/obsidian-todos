@@ -30,7 +30,6 @@ export interface AppRPCSchema {
     messages: {
       fileOpened: { path: string; content: string };
       fileChanged: { path: string; content: string };
-      windowShown: {};
       configChanged: { theme?: AppTheme; scanlines: boolean };
     };
   };

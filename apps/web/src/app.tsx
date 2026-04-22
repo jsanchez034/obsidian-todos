@@ -7,7 +7,7 @@ import { FileToolbar } from "@/components/file-toolbar";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
 import { useElectrobunRpc } from "@/hooks/use-electrobun-rpc";
-import { useFileState } from "@/hooks/use-file-state";
+import { type FileState, useFileState } from "@/hooks/use-file-state";
 
 function AppContent() {
   const rpc = useElectrobunRpc();
@@ -17,7 +17,7 @@ function AppContent() {
   const editorRef = useRef<MDXEditorMethods>(null);
 
   // Use refs to always have the latest values in async callbacks
-  const stateRef = useRef(state);
+  const stateRef = useRef<FileState>(state);
   stateRef.current = state;
 
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -87,40 +87,6 @@ function AppContent() {
         editorRef.current?.setMarkdown(data.content);
       }
     });
-  }, [rpc, setFile]);
-
-  // Subscribe to window shown — re-read file from disk
-  useEffect(() => {
-    return rpc.subscribe("windowShown", async () => {
-      const current = stateRef.current;
-      if (current.filePath && rpc.isElectrobun && !current.isDirty) {
-        const content = await rpc.readFile(current.filePath);
-        // Guard against race: if the file changed while we were reading, don't overwrite
-        if (content && stateRef.current.filePath === current.filePath) {
-          setFile(current.filePath, content);
-          editorRef.current?.setMarkdown(content);
-        }
-      }
-    });
-  }, [rpc, setFile]);
-
-  // Fallback: visibilitychange for when bun message arrives before webview is ready
-  useEffect(() => {
-    const handler = () => {
-      if (document.visibilityState === "visible") {
-        const current = stateRef.current;
-        if (current.filePath && rpc.isElectrobun && !current.isDirty) {
-          rpc.readFile(current.filePath).then((content) => {
-            if (content && stateRef.current.filePath === current.filePath) {
-              setFile(current.filePath!, content);
-              editorRef.current?.setMarkdown(content);
-            }
-          });
-        }
-      }
-    };
-    document.addEventListener("visibilitychange", handler);
-    return () => document.removeEventListener("visibilitychange", handler);
   }, [rpc, setFile]);
 
   const isNasa = theme === "nasa";
