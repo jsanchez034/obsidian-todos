@@ -49,7 +49,6 @@ function initElectroview(): Promise<any> {
           messages: {
             fileOpened: (data: any) => emit("fileOpened", data),
             fileChanged: (data: any) => emit("fileChanged", data),
-            windowShown: () => emit("windowShown", {}),
             configChanged: (data: any) => emit("configChanged", data),
           },
         },
