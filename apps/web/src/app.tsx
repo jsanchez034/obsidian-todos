@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { MDXEditorMethods } from "@mdxeditor/editor";
 
 import { Toaster } from "@obsidian-todos/ui/components/sonner";
 
 import { FileToolbar } from "@/components/file-toolbar";
-import { MarkdownEditor } from "@/components/markdown-editor";
+import { MarkdownEditor, type MarkdownEditorMethods } from "@/components/markdown-editor";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
 import { useElectrobunRpc } from "@/hooks/use-electrobun-rpc";
 import { type FileState, useFileState } from "@/hooks/use-file-state";
@@ -14,7 +13,7 @@ function AppContent() {
   const { theme, setTheme } = useTheme();
   const { state, setFile, setContent, setSaveStatus } = useFileState(rpc);
   const [scanlines, setScanlines] = useState(false);
-  const editorRef = useRef<MDXEditorMethods>(null);
+  const editorRef = useRef<MarkdownEditorMethods>(null);
 
   // Use refs to always have the latest values in async callbacks
   const stateRef = useRef<FileState>(state);
