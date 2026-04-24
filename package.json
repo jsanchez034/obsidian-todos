@@ -45,7 +45,7 @@
     "@vitest/coverage-v8": "^3.2.1",
     "oxfmt": "^0.26.0",
     "oxlint": "^1.41.0",
-    "turbo": "^2.8.12",
+    "turbo": "^2.9.6",
     "typescript": "^5",
     "vitest": "^3.2.1"
   },

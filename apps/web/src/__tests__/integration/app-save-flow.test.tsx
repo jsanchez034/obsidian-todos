@@ -4,25 +4,33 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RpcClient } from "@/hooks/use-electrobun-rpc";
 
-// Mock MDXEditor — it requires a full browser layout engine
-vi.mock("@mdxeditor/editor", () => ({
-  MDXEditor: ({ onChange, markdown }: { onChange?: (v: string) => void; markdown: string }) => (
-    <textarea
-      data-testid="mock-editor"
-      value={markdown}
-      onChange={(e) => onChange?.(e.target.value)}
-    />
-  ),
-  headingsPlugin: () => ({}),
-  listsPlugin: () => ({}),
-  markdownShortcutPlugin: () => ({}),
-  diffSourcePlugin: () => ({}),
-  toolbarPlugin: () => ({}),
-  BoldItalicUnderlineToggles: () => null,
-  ListsToggle: () => null,
-  DiffSourceToggleWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  Separator: () => null,
-}));
+// Mock the editor — TipTap requires a full browser layout engine.
+// The mock exposes the same imperative setMarkdown API and renders a textarea
+// so tests can drive input/output just like the real editor.
+vi.mock("@/components/markdown-editor", async () => {
+  const React = await vi.importActual<typeof import("react")>("react");
+  type Props = { content: string; onContentChange: (v: string) => void };
+  type Methods = { setMarkdown: (md: string) => void };
+  return {
+    MarkdownEditor: React.forwardRef<Methods, Props>(function MockEditor(
+      { content, onContentChange },
+      ref,
+    ) {
+      const [value, setValue] = React.useState(content);
+      React.useImperativeHandle(ref, () => ({ setMarkdown: (md: string) => setValue(md) }), []);
+      return (
+        <textarea
+          data-testid="mock-editor"
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            onContentChange(e.target.value);
+          }}
+        />
+      );
+    }),
+  };
+});
 
 // Mock sonner Toaster
 vi.mock("@obsidian-todos/ui/components/sonner", () => ({

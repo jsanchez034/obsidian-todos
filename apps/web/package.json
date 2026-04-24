@@ -10,9 +10,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mdxeditor/editor": "^3.53.1",
     "@obsidian-todos/env": "workspace:*",
     "@obsidian-todos/ui": "workspace:*",
+    "@tiptap/core": "^3.22.4",
+    "@tiptap/extension-task-item": "^3.22.4",
+    "@tiptap/extension-task-list": "^3.22.4",
+    "@tiptap/pm": "^3.22.4",
+    "@tiptap/react": "^3.22.4",
+    "@tiptap/starter-kit": "^3.22.4",
     "dotenv": "catalog:",
     "electrobun": "^1.15.1",
     "lucide-react": "catalog:",
@@ -20,6 +25,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "sonner": "catalog:",
+    "tiptap-markdown": "^0.9.0",
     "zod": "catalog:"
   },
   "devDependencies": {
