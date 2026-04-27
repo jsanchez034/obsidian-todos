@@ -1,11 +1,16 @@
 import { useMemo } from "react";
-import type { AppRPCSchema, AppTheme } from "@/lib/rpc-schema";
+import type { AppRPCSchema, AppTheme, FrameRect } from "@/lib/rpc-schema";
 
 export interface RpcClient {
   openFile: () => Promise<{ path: string; content: string } | null>;
   readFile: (path: string) => Promise<string>;
   saveFile: (path: string, content: string) => Promise<boolean>;
   getConfig: () => Promise<{ theme?: AppTheme; scanlines: boolean }>;
+  closeWindow: () => Promise<boolean>;
+  setWindowFrame: (frame: FrameRect) => Promise<boolean>;
+  setWindowFullScreen: (value: boolean) => Promise<boolean>;
+  restoreWindow: () => Promise<boolean>;
+  getDisplayWorkArea: () => Promise<FrameRect>;
   subscribe: (event: string, callback: (data: any) => void) => () => void;
   isElectrobun: boolean;
 }
@@ -89,6 +94,26 @@ const mockRpc: RpcClient = {
     console.log("[mock] getConfig called — not in Electrobun");
     return { scanlines: true };
   },
+  closeWindow: async () => {
+    console.log("[mock] closeWindow — not in Electrobun");
+    return false;
+  },
+  setWindowFrame: async () => {
+    console.log("[mock] setWindowFrame — not in Electrobun");
+    return false;
+  },
+  setWindowFullScreen: async () => {
+    console.log("[mock] setWindowFullScreen — not in Electrobun");
+    return false;
+  },
+  restoreWindow: async () => {
+    console.log("[mock] restoreWindow — not in Electrobun");
+    return false;
+  },
+  getDisplayWorkArea: async () => {
+    console.log("[mock] getDisplayWorkArea — not in Electrobun");
+    return { x: 0, y: 0, width: 1920, height: 1080 };
+  },
   subscribe: () => () => {},
   isElectrobun: false,
 };
@@ -117,6 +142,31 @@ function createElectrobunRpc(): RpcClient {
       const rpc = await initElectroview();
       if (!rpc) return { scanlines: false };
       return rpc.request.getConfig();
+    },
+    closeWindow: async () => {
+      const rpc = await initElectroview();
+      if (!rpc) return false;
+      return rpc.request.closeWindow();
+    },
+    setWindowFrame: async (frame: FrameRect) => {
+      const rpc = await initElectroview();
+      if (!rpc) return false;
+      return rpc.request.setWindowFrame(frame);
+    },
+    setWindowFullScreen: async (value: boolean) => {
+      const rpc = await initElectroview();
+      if (!rpc) return false;
+      return rpc.request.setWindowFullScreen({ value });
+    },
+    restoreWindow: async () => {
+      const rpc = await initElectroview();
+      if (!rpc) return false;
+      return rpc.request.restoreWindow();
+    },
+    getDisplayWorkArea: async () => {
+      const rpc = await initElectroview();
+      if (!rpc) return { x: 0, y: 0, width: 1920, height: 1080 };
+      return rpc.request.getDisplayWorkArea();
     },
     subscribe,
     isElectrobun: true,
