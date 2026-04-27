@@ -44,6 +44,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorMethods, MarkdownEditorPr
           class: "prose dark:prose-invert focus:outline-none max-w-none p-6",
         },
       },
+      autofocus: true,
     });
 
     useImperativeHandle(
