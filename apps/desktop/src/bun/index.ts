@@ -11,9 +11,41 @@ import {
   Utils,
 } from "electrobun/bun";
 import type { AppRPCSchema } from "../../../web/src/lib/rpc-schema";
+import { alwaysOnTopSequence } from "./lib/always-on-top-sequence";
 import { loadConfig, ensureConfig } from "./lib/config";
 import { loadState, removeRecentFile, trackRecentFile } from "./lib/state";
+import { decideToggleAction } from "./lib/toggle-decision";
 import { calculatePopupPosition } from "./lib/window-position";
+import { isValidFrameInput } from "./lib/window-rpc-validators";
+
+const POPUP_WIDTH = 400;
+const POPUP_HEIGHT = 600;
+
+interface Frame {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+// Compute the current anchor frame (where Restore should send the window).
+// Recomputed on each call so tray repositioning is picked up automatically.
+function computeAnchorFrame(): Frame {
+  const bounds = tray.getBounds();
+  const workArea = Screen.getPrimaryDisplay().workArea;
+  const { x, y } = calculatePopupPosition(bounds, workArea, POPUP_WIDTH, POPUP_HEIGHT);
+  return { x, y, width: POPUP_WIDTH, height: POPUP_HEIGHT };
+}
+
+// Apply the alwaysOnTop sequence around a frame change. Order matters:
+// disabling before zooming up prevents a frame above full-screen apps;
+// enabling after zooming down avoids a flash above other windows.
+function applyAlwaysOnTopSequence(target: Frame, apply: () => void) {
+  const seq = alwaysOnTopSequence(target, computeAnchorFrame());
+  if (seq.before === "off" && popupWindow) popupWindow.setAlwaysOnTop(false);
+  apply();
+  if (seq.after === "on" && popupWindow) popupWindow.setAlwaysOnTop(true);
+}
 
 // Hide dock icon — this is a menu bar-only app
 Utils.setDockIconVisible(false);
@@ -106,6 +138,51 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         const config = await loadConfig(CONFIG_PATH);
         return { theme: config.theme, scanlines: config.scanlines };
       },
+      closeWindow: async () => {
+        if (!popupWindow) return false;
+        hidePopup();
+        return true;
+      },
+      setWindowFrame: async (params: unknown) => {
+        if (!isValidFrameInput(params)) return false;
+        if (!popupWindow) return false;
+        const target: Frame = {
+          x: params.x,
+          y: params.y,
+          width: params.width,
+          height: params.height,
+        };
+        applyAlwaysOnTopSequence(target, () => {
+          popupWindow?.setFrame(target.x, target.y, target.width, target.height);
+        });
+        return true;
+      },
+      setWindowFullScreen: async ({ value }: { value: boolean }) => {
+        if (typeof value !== "boolean") return false;
+        if (!popupWindow) return false;
+        if (value) {
+          // Full-screen is treated as a non-anchor frame — disable alwaysOnTop first
+          popupWindow.setAlwaysOnTop(false);
+          popupWindow.setFullScreen(true);
+        } else {
+          // Exiting full-screen alone — alwaysOnTop is resequenced by the
+          // subsequent setWindowFrame/restoreWindow call that places the window.
+          popupWindow.setFullScreen(false);
+        }
+        return true;
+      },
+      restoreWindow: async () => {
+        if (!popupWindow) return false;
+        if (popupWindow.isFullScreen()) popupWindow.setFullScreen(false);
+        const anchor = computeAnchorFrame();
+        applyAlwaysOnTopSequence(anchor, () => {
+          popupWindow?.setFrame(anchor.x, anchor.y, anchor.width, anchor.height);
+        });
+        return true;
+      },
+      getDisplayWorkArea: async () => {
+        return Screen.getPrimaryDisplay().workArea;
+      },
     },
     messages: {
       webviewReady: async () => {
@@ -139,11 +216,17 @@ const tray = new Tray({
 
 // Popup window management.
 //
-// The popup is destroyed on hide (close) rather than minimized. This releases
-// OS-level focus immediately so the global hotkey fires on the next press —
-// minimize keeps focus during its animation, which caused WKWebView to swallow
-// Cmd+Shift+G as "Find Previous" (beep) and the global shortcut never fired.
+// The popup is destroyed on hide (via the global hotkey) rather than minimized.
+// This releases OS-level focus immediately so the global hotkey fires on the
+// next press — minimize keeps focus during its animation, which caused
+// WKWebView to swallow Cmd+Shift+G as "Find Previous" (beep) and the global
+// shortcut never fired.
+//
+// Click-away (loss of OS focus) does NOT close the popup — the user can focus
+// other apps and return to the popup intact. The global hotkey still toggles
+// destroy/focus/show via `decideToggleAction`.
 let popupWindow: BrowserWindow<typeof rpc> | null = null;
+let isPopupFocused = false;
 
 function showPopup() {
   if (popupWindow) {
@@ -154,15 +237,13 @@ function showPopup() {
   const bounds = tray.getBounds();
   const display = Screen.getPrimaryDisplay();
   const workArea = display.workArea;
-  const popupWidth = 400;
-  const popupHeight = 600;
 
-  const { x, y } = calculatePopupPosition(bounds, workArea, popupWidth, popupHeight);
+  const { x, y } = calculatePopupPosition(bounds, workArea, POPUP_WIDTH, POPUP_HEIGHT);
 
   popupWindow = new BrowserWindow({
     title: "obsidian-todos",
     url: "views://popup/index.html",
-    frame: { width: popupWidth, height: popupHeight, x, y },
+    frame: { width: POPUP_WIDTH, height: POPUP_HEIGHT, x, y },
     styleMask: {
       Borderless: true,
       Titled: false,
@@ -176,9 +257,13 @@ function showPopup() {
   popupWindow.setAlwaysOnTop(true);
   popupWindow.on("close", () => {
     popupWindow = null;
+    isPopupFocused = false;
+  });
+  popupWindow.on("focus", () => {
+    isPopupFocused = true;
   });
   popupWindow.on("blur", () => {
-    hidePopup();
+    isPopupFocused = false;
   });
 }
 
@@ -240,12 +325,24 @@ async function openRecentFile(filePath: string) {
 }
 
 function togglePopup() {
-  if (popupWindow) {
-    hidePopup();
-  } else if (currentFilePath) {
-    showPopup();
-  } else {
-    showTrayContextMenu();
+  const action = decideToggleAction({
+    exists: popupWindow !== null,
+    focused: isPopupFocused,
+    hasCurrentFile: currentFilePath !== null,
+  });
+  switch (action) {
+    case "hide":
+      hidePopup();
+      break;
+    case "focus":
+      popupWindow?.focus();
+      break;
+    case "show":
+      showPopup();
+      break;
+    case "show-tray-menu":
+      showTrayContextMenu();
+      break;
   }
 }
 
