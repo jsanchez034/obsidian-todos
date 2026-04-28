@@ -1,4 +1,5 @@
 import { Maximize2, Minimize2 } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import { useElectrobunRpc } from "@/hooks/use-electrobun-rpc";
 import { tileFrame, type TilePreset } from "@/lib/window-tiling";
@@ -85,6 +86,14 @@ interface ZoomPopoverProps {
 
 export function ZoomPopover({ onAction }: ZoomPopoverProps) {
   const rpc = useElectrobunRpc();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      containerRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const tile = async (preset: TilePreset) => {
     const workArea = await rpc.getDisplayWorkArea();
@@ -104,7 +113,7 @@ export function ZoomPopover({ onAction }: ZoomPopoverProps) {
   };
 
   return (
-    <div className="flex flex-col gap-3 p-1 text-xs">
+    <div ref={containerRef} className="flex flex-col gap-3 p-1 text-xs">
       <section aria-labelledby="zoom-section-move">
         <h3
           id="zoom-section-move"
@@ -113,7 +122,7 @@ export function ZoomPopover({ onAction }: ZoomPopoverProps) {
           Move &amp; Resize
         </h3>
         <div className="flex gap-1">
-          <TileButton preset="left-half" label="Left half" onClick={() => tile("left-half")} autoFocus />
+          <TileButton preset="left-half" label="Left half" onClick={() => tile("left-half")} />
           <TileButton preset="right-half" label="Right half" onClick={() => tile("right-half")} />
           <TileButton preset="top-half" label="Top half" onClick={() => tile("top-half")} />
           <TileButton
