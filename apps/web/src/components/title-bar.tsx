@@ -71,6 +71,7 @@ export function TitleBar() {
       className="flex h-7 shrink-0 items-center gap-2 border-b border-border bg-background px-3 select-none"
     >
       <DotButton
+        tabIndex={0}
         color="bg-[#ff5f57] hover:bg-[#ff5f57]/90"
         aria-label="Close window"
         onClick={() => {
@@ -82,7 +83,11 @@ export function TitleBar() {
       <Popover open={zoomOpen} onOpenChange={setZoomOpen} modal="trap-focus">
         <PopoverTrigger
           render={
-            <DotButton color="bg-[#28c941] hover:bg-[#28c941]/90" aria-label="Zoom window">
+            <DotButton
+              tabIndex={0}
+              color="bg-[#28c941] hover:bg-[#28c941]/90"
+              aria-label="Zoom window"
+            >
               <ZoomGlyph />
             </DotButton>
           }
