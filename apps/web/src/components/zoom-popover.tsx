@@ -1,5 +1,6 @@
+import { PopoverClose } from "@obsidian-todos/ui/components/popover";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 import { useElectrobunRpc } from "@/hooks/use-electrobun-rpc";
 import { tileFrame, type TilePreset } from "@/lib/window-tiling";
@@ -88,13 +89,6 @@ export function ZoomPopover({ onAction }: ZoomPopoverProps) {
   const rpc = useElectrobunRpc();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      containerRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
-    });
-    return () => cancelAnimationFrame(id);
-  }, []);
-
   const tile = async (preset: TilePreset) => {
     const workArea = await rpc.getDisplayWorkArea();
     const frame = tileFrame(preset, workArea);
@@ -114,6 +108,8 @@ export function ZoomPopover({ onAction }: ZoomPopoverProps) {
 
   return (
     <div ref={containerRef} className="flex flex-col gap-3 p-1 text-xs">
+      {/* Required for Base UI trap-focus to activate FloatingFocusManager */}
+      <PopoverClose className="sr-only">Close</PopoverClose>
       <section aria-labelledby="zoom-section-move">
         <h3
           id="zoom-section-move"
@@ -122,10 +118,26 @@ export function ZoomPopover({ onAction }: ZoomPopoverProps) {
           Move &amp; Resize
         </h3>
         <div className="flex gap-1">
-          <TileButton preset="left-half" label="Left half" onClick={() => tile("left-half")} />
-          <TileButton preset="right-half" label="Right half" onClick={() => tile("right-half")} />
-          <TileButton preset="top-half" label="Top half" onClick={() => tile("top-half")} />
           <TileButton
+            tabIndex={0}
+            preset="left-half"
+            label="Left half"
+            onClick={() => tile("left-half")}
+          />
+          <TileButton
+            tabIndex={0}
+            preset="right-half"
+            label="Right half"
+            onClick={() => tile("right-half")}
+          />
+          <TileButton
+            tabIndex={0}
+            preset="top-half"
+            label="Top half"
+            onClick={() => tile("top-half")}
+          />
+          <TileButton
+            tabIndex={0}
             preset="bottom-half"
             label="Bottom half"
             onClick={() => tile("bottom-half")}
@@ -141,18 +153,21 @@ export function ZoomPopover({ onAction }: ZoomPopoverProps) {
           Fill &amp; Arrange
         </h3>
         <div className="flex gap-1">
-          <TileButton preset="fill" label="Fill" onClick={() => tile("fill")} />
+          <TileButton tabIndex={0} preset="fill" label="Fill" onClick={() => tile("fill")} />
           <TileButton
+            tabIndex={0}
             preset="vertical-split-left"
             label="Left side, split"
             onClick={() => tile("vertical-split-left")}
           />
           <TileButton
+            tabIndex={0}
             preset="vertical-split-right"
             label="Right side, split"
             onClick={() => tile("vertical-split-right")}
           />
           <TileButton
+            tabIndex={0}
             preset="top-left"
             label="Top-left quadrant"
             onClick={() => tile("top-left")}
@@ -164,11 +179,17 @@ export function ZoomPopover({ onAction }: ZoomPopoverProps) {
 
       <div className="flex flex-col gap-0.5">
         <ActionButton
+          tabIndex={0}
           label="Full Screen"
           icon={<Maximize2 className="size-3.5" />}
           onClick={fullScreen}
         />
-        <ActionButton label="Restore" icon={<Minimize2 className="size-3.5" />} onClick={restore} />
+        <ActionButton
+          tabIndex={0}
+          label="Restore"
+          icon={<Minimize2 className="size-3.5" />}
+          onClick={restore}
+        />
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ function ZoomGlyph() {
     <svg
       viewBox="0 0 12 12"
       aria-hidden="true"
-      className="size-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 group-data-[popup-open]:opacity-100"
+      className="size-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 group-data-popup-open:opacity-100"
     >
       <path
         d="M3.5 6.5 L3.5 3.5 L6.5 3.5 M5.5 8.5 L8.5 8.5 L8.5 5.5"
