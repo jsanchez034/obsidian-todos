@@ -5,6 +5,7 @@ import { Toaster } from "@obsidian-todos/ui/components/sonner";
 import { FileToolbar } from "@/components/file-toolbar";
 import { MarkdownEditor, type MarkdownEditorMethods } from "@/components/markdown-editor";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
+import { TitleBar } from "@/components/title-bar";
 import { useElectrobunRpc } from "@/hooks/use-electrobun-rpc";
 import { type FileState, useFileState } from "@/hooks/use-file-state";
 
@@ -104,6 +105,7 @@ function AppContent() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+      <TitleBar />
       <FileToolbar filePath={state.filePath} saveStatus={state.saveStatus} />
       <div
         className={`relative flex-1 overflow-y-auto${isNasa ? " nasa-editor-container" : ""}`}

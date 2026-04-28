@@ -62,6 +62,11 @@ beforeEach(() => {
     readFile: vi.fn(async () => ""),
     saveFile: vi.fn(async () => true),
     getConfig: vi.fn(async () => ({ scanlines: true as const })),
+    closeWindow: vi.fn(async () => true),
+    setWindowFrame: vi.fn(async () => true),
+    setWindowFullScreen: vi.fn(async () => true),
+    restoreWindow: vi.fn(async () => true),
+    getDisplayWorkArea: vi.fn(async () => ({ x: 0, y: 0, width: 1920, height: 1080 })),
     subscribe: vi.fn((event: string, callback: (data: any) => void) => {
       if (!subscriptions.has(event)) subscriptions.set(event, new Set());
       subscriptions.get(event)!.add(callback);

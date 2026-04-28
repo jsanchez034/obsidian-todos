@@ -4,6 +4,13 @@
 
 export type AppTheme = "light" | "dark" | "nasa";
 
+export interface FrameRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface AppRPCSchema {
   bun: {
     requests: {
@@ -19,6 +26,20 @@ export interface AppRPCSchema {
       getConfig: {
         params: void;
         response: { theme?: AppTheme; scanlines: boolean };
+      };
+      closeWindow: { params: void; response: boolean };
+      setWindowFrame: {
+        params: FrameRect;
+        response: boolean;
+      };
+      setWindowFullScreen: {
+        params: { value: boolean };
+        response: boolean;
+      };
+      restoreWindow: { params: void; response: boolean };
+      getDisplayWorkArea: {
+        params: void;
+        response: FrameRect;
       };
     };
     messages: {
