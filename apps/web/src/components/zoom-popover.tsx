@@ -43,37 +43,35 @@ function TileIcon({ preset }: { preset: TilePreset }) {
   );
 }
 
-interface TileButtonProps {
+interface TileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   preset: TilePreset;
   label: string;
-  onClick: () => void;
 }
 
-function TileButton({ preset, label, onClick }: TileButtonProps) {
+function TileButton({ preset, label, className, ...props }: TileButtonProps) {
   return (
     <button
       type="button"
       aria-label={label}
-      onClick={onClick}
-      className="inline-flex h-10 w-12 items-center justify-center rounded-sm border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+      className={`inline-flex h-10 w-12 items-center justify-center rounded-sm border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none${className ? ` ${className}` : ""}`}
+      {...props}
     >
       <TileIcon preset={preset} />
     </button>
   );
 }
 
-interface ActionButtonProps {
+interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label: string;
   icon: React.ReactNode;
-  onClick: () => void;
 }
 
-function ActionButton({ label, icon, onClick }: ActionButtonProps) {
+function ActionButton({ label, icon, className, ...props }: ActionButtonProps) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:outline-none"
+      className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none${className ? ` ${className}` : ""}`}
+      {...props}
     >
       <span className="text-muted-foreground">{icon}</span>
       <span>{label}</span>
@@ -115,7 +113,7 @@ export function ZoomPopover({ onAction }: ZoomPopoverProps) {
           Move &amp; Resize
         </h3>
         <div className="flex gap-1">
-          <TileButton preset="left-half" label="Left half" onClick={() => tile("left-half")} />
+          <TileButton preset="left-half" label="Left half" onClick={() => tile("left-half")} autoFocus />
           <TileButton preset="right-half" label="Right half" onClick={() => tile("right-half")} />
           <TileButton preset="top-half" label="Top half" onClick={() => tile("top-half")} />
           <TileButton

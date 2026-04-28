@@ -161,19 +161,21 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
         if (typeof value !== "boolean") return false;
         if (!popupWindow) return false;
         if (value) {
-          // Full-screen is treated as a non-anchor frame — disable alwaysOnTop first
+          // Resizable:false prevents native macOS fullscreen — use frame-based
+          // pseudo-fullscreen covering the full display bounds instead.
           popupWindow.setAlwaysOnTop(false);
-          popupWindow.setFullScreen(true);
+          const { bounds } = Screen.getPrimaryDisplay();
+          popupWindow.setFrame(bounds.x, bounds.y, bounds.width, bounds.height);
         } else {
-          // Exiting full-screen alone — alwaysOnTop is resequenced by the
-          // subsequent setWindowFrame/restoreWindow call that places the window.
-          popupWindow.setFullScreen(false);
+          const anchor = computeAnchorFrame();
+          applyAlwaysOnTopSequence(anchor, () => {
+            popupWindow?.setFrame(anchor.x, anchor.y, anchor.width, anchor.height);
+          });
         }
         return true;
       },
       restoreWindow: async () => {
         if (!popupWindow) return false;
-        if (popupWindow.isFullScreen()) popupWindow.setFullScreen(false);
         const anchor = computeAnchorFrame();
         applyAlwaysOnTopSequence(anchor, () => {
           popupWindow?.setFrame(anchor.x, anchor.y, anchor.width, anchor.height);
