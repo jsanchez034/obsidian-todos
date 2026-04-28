@@ -79,7 +79,7 @@ export function TitleBar() {
       >
         <CloseGlyph />
       </DotButton>
-      <Popover open={zoomOpen} onOpenChange={setZoomOpen}>
+      <Popover open={zoomOpen} onOpenChange={setZoomOpen} modal="trap-focus">
         <PopoverTrigger
           render={
             <DotButton color="bg-[#28c941] hover:bg-[#28c941]/90" aria-label="Zoom window">

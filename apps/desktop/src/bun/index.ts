@@ -164,8 +164,8 @@ const rpc = BrowserView.defineRPC<AppRPCSchema>({
           // Resizable:false prevents native macOS fullscreen — use frame-based
           // pseudo-fullscreen covering the full display bounds instead.
           popupWindow.setAlwaysOnTop(false);
-          const { bounds } = Screen.getPrimaryDisplay();
-          popupWindow.setFrame(bounds.x, bounds.y, bounds.width, bounds.height);
+          const { workArea } = Screen.getPrimaryDisplay();
+          popupWindow.setFrame(workArea.x, workArea.y, workArea.width, workArea.height);
         } else {
           const anchor = computeAnchorFrame();
           applyAlwaysOnTopSequence(anchor, () => {
