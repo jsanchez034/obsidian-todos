@@ -80,7 +80,7 @@ Activating the green zoom button SHALL open a popover (built with the shadcn `Po
 #### Scenario: Selecting Full Screen enters native full-screen
 
 - **WHEN** the user selects "Full Screen"
-- **THEN** the window enters macOS full-screen mode via `setFullScreen(true)`
+- **THEN** the window enters macOS full-screen mode via frame-based pseudo-fullscreen (due to Electrobun's Resizable: false constraint)
 
 #### Scenario: Selecting Restore returns to the anchor frame
 
